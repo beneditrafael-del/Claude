@@ -1,6 +1,6 @@
 # Mensajes a obras de Buenos Aires
 
-Mensajes personalizados con los datos de Aberturas GH S.R.L. (catálogo 2026). Antes de enviar cada mail, adjuntar el PDF del catálogo (Catalogo_AberturasGH_2026_Premium.pdf, en el Drive).
+Mensajes personalizados con los datos de Aberturas GH S.R.L. (catálogo 2026).
 
 ## Mails (borradores personalizados en Gmail, sin enviar)
 

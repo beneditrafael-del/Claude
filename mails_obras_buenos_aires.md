@@ -1,6 +1,6 @@
 # Mails a obras de Buenos Aires (Aberturas GH)
 
-Antes de enviar cada uno, adjuntar el PDF del catálogo (Catalogo_AberturasGH_2026_Premium.pdf, en el Drive).
+Los mails no llevan adjunto: ofrecen el catálogo para mandarlo si lo piden.
 
 ---
 
@@ -16,7 +16,7 @@ Les escribo por Palacio Molina. Vimos que la obra arranca en enero de 2027 y nos
 
 Para los lofts, el PVC tiene ventajas concretas frente al aluminio: aislación térmica y acústica de origen (clave en una zona como Barracas), cero mantenimiento y buena relación costo/prestación frente al aluminio con puente térmico. Fabricamos en planta propia con perfiles Muchteck (ex Tecnocom), con refuerzo de acero galvanizado, en toda la gama: oscilobatientes, corredizas, paños fijos, proyectantes y puertas, con DVH, laminado o templado y en varios colores (incluso distinto color interior y exterior).
 
-Les adjunto nuestro catálogo 2026. Si les sirve, nos gustaría cotizar a partir de los planos, aunque sea para que tengan una alternativa para comparar. La medición en obra la hacemos nosotros sin costo, y después de la instalación seguimos acompañando la obra con postventa real.
+Si les interesa, con gusto les envío nuestro catálogo 2026 y les cotizamos a partir de los planos, aunque sea para que tengan una alternativa para comparar. La medición en obra la hacemos nosotros sin costo, y después de la instalación seguimos acompañando la obra con postventa real.
 
 ¿Me podrían indicar quién está a cargo de compras o de la dirección de obra? También podemos coordinar para vernos durante Casa FOA en octubre.
 
@@ -41,7 +41,7 @@ Vimos la presentación de PI Buenos Aires en el Parque de la Innovación y que H
 
 En un edificio de oficinas sobre Libertador, el PVC suma en dos puntos que después se notan en la operación: aislación acústica frente al ruido de la avenida y aislación térmica, que baja el consumo de climatización. Además no requiere mantenimiento ni se corroe. Fabricamos en planta propia con perfiles Muchteck (ex Tecnocom) con refuerzo de acero galvanizado: paños fijos de gran superficie, oscilobatientes, proyectantes y puertas, con DVH, laminado o templado.
 
-Les adjunto nuestro catálogo 2026. Si les parece, nos encantaría cotizar la parte de aberturas a partir de los planos, aunque sea para que tengan una alternativa para comparar. Incluimos medición en obra y postventa directa con nosotros.
+Si les interesa, con gusto les envío nuestro catálogo 2026. También nos encantaría cotizar la parte de aberturas a partir de los planos, aunque sea para que tengan una alternativa para comparar. Incluimos medición en obra y postventa directa con nosotros.
 
 ¿Me podrían derivar con la persona responsable de compras o del proyecto de obra?
 
@@ -66,7 +66,7 @@ Les escribo por La Tour Avenida Alvear Residences. Sabemos que la obra está en 
 
 Para un producto con servicios de hotelería cinco estrellas, en una esquina como Alvear y Ayacucho, entendemos que lo que más pesa es el confort acústico y térmico y una terminación impecable. En eso el PVC rinde de origen, sin el sobrecosto del aluminio con puente térmico. Trabajamos oscilobatientes (nuestra línea más hermética), corredizas reforzadas para balcones, paños fijos y puertas, con DVH, laminado o templado, en colores como Golden Oak, Nogal, Gris Grafito o Negro, e incluso con color distinto adentro y afuera.
 
-Les adjunto nuestro catálogo 2026. Nos gustaría cotizarles a partir de planos, aunque sea para que tengan una alternativa para comparar, y también presentarnos para los próximos proyectos de Branson en el corredor norte. La medición en obra la hacemos nosotros y la postventa la damos directamente, sin intermediarios.
+Si les interesa, con gusto les envío nuestro catálogo 2026. Nos gustaría cotizarles a partir de planos, aunque sea para que tengan una alternativa para comparar, y también presentarnos para los próximos proyectos de Branson en el corredor norte. La medición en obra la hacemos nosotros y la postventa la damos directamente, sin intermediarios.
 
 ¿Me podrían indicar a quién dirigirme en compras o en la dirección de obra?
 
@@ -91,7 +91,7 @@ Vimos que arrancaron la obra de Chivilcoy II en Villa Devoto y queríamos presen
 
 Para unidades de semipiso con balcones aterrazados les podemos ofrecer corredizas reforzadas para los balcones, oscilobatientes para dormitorios (nuestra línea más hermética) y proyectantes para baños y cocinas, todas con DVH. El PVC aísla térmica y acústicamente de origen, no requiere mantenimiento y es un argumento de venta concreto para el comprador.
 
-Les adjunto nuestro catálogo 2026. Si les sirve, pasamos por la obra a tomar medidas sin costo y les armamos una cotización, aunque sea para comparar. Y si les cierra, nos encantaría acompañarlos también en Chivilcoy 2360, Nogoyá y los proyectos que vengan.
+Si les interesa, con gusto les envío nuestro catálogo 2026. También podemos pasar por la obra a tomar medidas sin costo y les armamos una cotización, aunque sea para comparar. Y si les cierra, nos encantaría acompañarlos también en Chivilcoy 2360, Nogoyá y los proyectos que vengan.
 
 ¿Con quién podemos coordinar en compras o en la dirección de obra?
 
@@ -116,7 +116,7 @@ Vimos el lanzamiento de LIV Costa Rica y nos gustó mucho la propuesta de "casas
 
 Además, el PVC aporta aislación térmica y acústica de origen (en Palermo Hollywood el ruido pesa) y no requiere mantenimiento. Fabricamos en planta propia con perfiles Muchteck (ex Tecnocom) y resolvemos detalles a medida del proyecto.
 
-Les adjunto nuestro catálogo 2026. Como el proyecto está en preventa, nos gustaría cotizarles desde planos y, si les sirve, pasar por el estudio con muestras. También queremos presentarnos para LIV Guatemala, SENS y los proyectos que tengan en carpeta.
+Si les interesa, con gusto les envío nuestro catálogo 2026. Como el proyecto está en preventa, nos gustaría cotizarles desde planos y, si les sirve, pasar por el estudio con muestras. También queremos presentarnos para LIV Guatemala, SENS y los proyectos que tengan en carpeta.
 
 ¿Con quién podemos coordinar?
 
