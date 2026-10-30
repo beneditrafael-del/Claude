@@ -1,0 +1,426 @@
+<title>Cotizador GH Aberturas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: banco de trabajo — formulario + plano a la izquierda, presupuesto vivo a la derecha; abajo, paneles técnicos. */
+:root {
+  --bg: #f3f5f4; --panel: #ffffff; --ink: #1b2422; --muted: #5d6b67; --line: #d5dcd9;
+  --accent: #0e6a64; --accent-ink: #ffffff; --accent-soft: #dcefec; --wood: #a8712f;
+  --warn: #9a5b00; --bad: #b3261e; --good: #1f7a3a;
+  --f-display: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121816; --panel: #1a2220; --ink: #e6ecea; --muted: #9aa8a4; --line: #2e3a37;
+  --accent: #4fb8ae; --accent-ink: #0b1513; --accent-soft: #1d3532; --wood: #d39a55;
+  --warn: #e3a64a; --bad: #ff8a80; --good: #6fcf8a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121816; --panel: #1a2220; --ink: #e6ecea; --muted: #9aa8a4; --line: #2e3a37;
+  --accent: #4fb8ae; --accent-ink: #0b1513; --accent-soft: #1d3532; --wood: #d39a55;
+  --warn: #e3a64a; --bad: #ff8a80; --good: #6fcf8a; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px }
+.wrap { max-width: 1240px; margin: 0 auto }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: .01em }
+h1 { font-size: 1.7rem; font-weight: 700 }
+h2 { font-size: 1.15rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em }
+.num, .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.muted { color: var(--muted) }
+small { font-size: .82rem }
+
+header.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; padding-block: 20px 16px; border-bottom: 2px solid var(--ink); margin-bottom: 18px }
+header.top .marca { display: flex; flex-direction: column; gap: 2px }
+header.top .lema { font-family: var(--f-display); color: var(--muted); letter-spacing: .14em; text-transform: uppercase; font-size: .78rem }
+.cliente { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; flex: 1 1 520px; max-width: 720px }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 18px; align-items: start }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr) } .cliente { grid-template-columns: minmax(0, 1fr) } }
+
+section.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.cardhead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap }
+
+label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; min-width: 0 }
+input, select, textarea { font: inherit; font-size: .95rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; width: 100%; min-width: 0; text-transform: none; letter-spacing: 0 }
+input[type=number] { font-family: var(--f-mono) }
+input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+.check { flex-direction: row; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: .95rem; color: var(--ink) }
+.check input { width: auto }
+
+.form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px }
+.form .span2 { grid-column: span 2 } .form .span4 { grid-column: 1 / -1 }
+@media (max-width: 520px) { .form { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+
+button { font: 600 .92rem var(--f-body); border-radius: 4px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink) }
+button.prim { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+button.link { background: none; border: 0; padding: 4px 6px; color: var(--accent); font-weight: 500 }
+button.link.del { color: var(--bad) }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+
+.plano { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: center }
+@media (max-width: 520px) { .plano { grid-template-columns: minmax(0, 1fr) } }
+.plano svg { width: 100%; height: auto; max-height: 260px }
+.desg { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: .92rem }
+.desg .num { text-align: right }
+.desg .tot { font-weight: 600; border-top: 1px solid var(--line); padding-top: 4px }
+.chip { display: inline-block; font: 500 .72rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent) }
+.chip.warn { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn) }
+
+.tabla { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: .9rem }
+th { font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap }
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top }
+td.num, th.num { text-align: right; white-space: nowrap }
+tr.sel td { background: var(--accent-soft) }
+.desc { font-size: .84rem; color: var(--muted); margin-top: 2px }
+
+.totales { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-size: .95rem }
+.totales .num { text-align: right }
+.totales .big { font-family: var(--f-display); font-size: 1.5rem; font-weight: 700 }
+.totales .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); margin: 4px 0 }
+.minis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+
+pre.doc { font: .82rem/1.5 var(--f-mono); background: var(--bg); border: 1px dashed var(--line); padding: 12px; white-space: pre-wrap; margin: 0; max-height: 420px; overflow: auto }
+
+details.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); margin-top: 18px }
+details.card > summary { cursor: pointer; padding: 14px 16px; font-family: var(--f-display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; list-style: none; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap }
+details.card > summary::after { content: "+"; font-family: var(--f-mono) }
+details.card[open] > summary::after { content: "−" }
+details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px }
+.params { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px }
+.e-ok { color: var(--good) } .e-mid { color: var(--warn) } .e-bad { color: var(--bad) }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 4px; font-size: .9rem }
+@media (prefers-reduced-motion: no-preference) { tr { transition: background .15s } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="marca">
+      <span class="lema">Aberturas GH · PVC línea Tecnocom / Muchtek</span>
+      <h1>Cotizador GH Aberturas</h1>
+    </div>
+    <div class="cliente">
+      <label>Cliente<input id="c-nombre" placeholder="Sres. …"></label>
+      <label>Dirección / obra<input id="c-dir" placeholder="Dirección"></label>
+      <label>Fecha<input id="c-fecha" type="date"></label>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="h-nueva">
+      <div class="cardhead"><h2 id="h-nueva">Abertura</h2><span class="chip" id="modo-chip">Nueva</span></div>
+      <form class="form" id="f-item" autocomplete="off">
+        <label class="span2">Tipología<select id="f-tip"></select></label>
+        <label>Tipo / posición<input id="f-cod" placeholder="VC1"></label>
+        <label>Cantidad<input id="f-cant" type="number" min="1" step="1" value="1"></label>
+        <label>Ancho (mm)<input id="f-ancho" type="number" min="300" step="5" value="1500"></label>
+        <label>Alto (mm)<input id="f-alto" type="number" min="300" step="5" value="1100"></label>
+        <label class="span2">Color<select id="f-color"></select></label>
+        <label class="span2">Vidrio<select id="f-vidrio"></select></label>
+        <label class="check span2" id="l-mosq"><input type="checkbox" id="f-mosq"> Con mosquitero</label>
+        <div class="row span4">
+          <button type="submit" class="prim" id="b-guardar">Agregar al presupuesto</button>
+          <button type="button" id="b-cancelar" hidden>Cancelar edición</button>
+        </div>
+      </form>
+      <div class="plano">
+        <svg id="dibujo" viewBox="0 0 300 260" role="img" aria-label="Plano de la abertura"></svg>
+        <div>
+          <div class="row" style="justify-content:space-between"><strong id="p-titulo">Precio de lista</strong><span class="muted"><small>por unidad, sin descuento</small></span></div>
+          <div class="desg" id="p-desg"></div>
+          <p class="muted" style="margin:.6em 0 0"><small>Calibrado con 80 ventanas reales de WMaker. La mitad dan a menos del 3,7% del precio real.</small></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-pres">
+      <div class="cardhead"><h2 id="h-pres">Presupuesto</h2><span class="muted" id="pres-cant"></span></div>
+      <div class="tabla"><table>
+        <thead><tr><th>Tipo</th><th class="num">Cant.</th><th>Medida</th><th class="num">USD x U</th><th class="num">Total</th><th></th></tr></thead>
+        <tbody id="t-items"></tbody>
+      </table></div>
+      <div class="minis">
+        <label>Descuento %<input id="t-desc" type="number" min="0" max="90" step="1"></label>
+        <label>Colocación USD<input id="t-coloc" type="number" min="0" step="10"></label>
+        <label>Contramarcos USD<input id="t-contra" type="number" min="0" step="10"></label>
+      </div>
+      <div class="totales" id="t-tot"></div>
+      <div class="row">
+        <button type="button" class="prim" id="b-copiar">Copiar presupuesto</button>
+        <button type="button" id="b-nuevo">Presupuesto nuevo</button>
+        <span id="confirm-nuevo" hidden class="row"><span class="muted">¿Borrar todo?</span><button type="button" id="b-si">Sí, borrar</button><button type="button" id="b-no">No</button></span>
+      </div>
+    </section>
+  </div>
+
+  <details class="card" id="d-doc">
+    <summary>Vista del presupuesto <span class="muted" style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400">formato WMaker, listo para pegar</span></summary>
+    <div class="in"><pre class="doc" id="doc"></pre></div>
+  </details>
+
+  <details class="card" id="d-hetmo">
+    <summary>Despiece y costo estilo Hetmo <span class="chip warn">Estimado: falta la ficha técnica</span></summary>
+    <div class="in">
+      <p class="muted" style="margin:0">Despiece armado con la lógica de cada tipología y los precios de la lista de almacén de Hetmo. Calcula igual que la pantalla "Análisis de importes": Compra → Venta 1 (perfiles y refuerzos +7%) → Venta (margen 55%). Las medidas de corte y la mano de obra son supuestos hasta tener las fichas reales.</p>
+      <div class="row"><label style="flex:1 1 260px">Abertura<select id="h-item"></select></label></div>
+      <div class="tabla"><table>
+        <thead><tr><th>Código</th><th>Artículo</th><th class="num">Cant.</th><th>Detalle</th><th class="num">Precio</th><th class="num">Importe</th></tr></thead>
+        <tbody id="h-det"></tbody>
+      </table></div>
+      <div class="tabla"><table>
+        <thead><tr><th>Partida</th><th class="num">Compra</th><th class="num">Venta 1</th><th class="num">Venta</th></tr></thead>
+        <tbody id="h-res"></tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <details class="card" id="d-params">
+    <summary>Parámetros de cálculo</summary>
+    <div class="in">
+      <div class="params" id="params"></div>
+      <div class="row"><button type="button" id="b-reset">Volver a los valores de fábrica</button></div>
+    </div>
+  </details>
+
+  <details class="card" id="d-valid">
+    <summary>Control contra ventanas reales de WMaker <span class="muted" id="v-res" style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400"></span></summary>
+    <div class="in"><div class="tabla"><table>
+      <thead><tr><th>Código</th><th>Tipología</th><th>Medida</th><th>Color / vidrio</th><th class="num">Real</th><th class="num">Cotizador</th><th class="num">Dif.</th></tr></thead>
+      <tbody id="v-tab"></tbody>
+    </table></div></div>
+  </details>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="motor.js"></script>
+<script>
+(() => {
+  const M = window.MotorGH;
+  const $ = id => document.getElementById(id);
+  const fmt = x => (x || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const KEY = 'gh-cotizador-v1';
+  const PARAM_LABELS = {
+    recargoColor: 'Recargo color foliado (×)', recargoBicolor: 'Recargo bicolor (×)', descuento: 'Descuento por defecto %', iva: 'IVA %',
+    colocacionBase: 'Colocación fija USD', colocacionM2: 'Colocación USD por m²', contramarcoMl: 'Contramarco USD por metro', redondeo: 'Redondeo colocación USD',
+    tipoCambio: 'Hetmo: dólar para vidrios ($)', mermaPerfiles: 'Hetmo: merma perfiles (×)', margen: 'Hetmo: margen tarifa %',
+    manoObraM2: 'Hetmo: mano de obra USD/m²', manoObraHoja: 'Hetmo: mano de obra USD/hoja', acristalamientoM2: 'Hetmo: acristalamiento USD/m²',
+  };
+
+  const ejemplo = () => ({
+    cliente: { nombre: 'Ejemplo · Belu Urda', dir: 'CUBA', fecha: new Date().toISOString().slice(0, 10) },
+    items: [{ id: 1, cod: 'VC1', tipologia: 'corr2', ancho: 1610, alto: 1220, cantidad: 2, color: 'bic_grafito', vidrio: 'dvh', mosquitero: true }],
+    descuento: 40, coloc: null, contra: null, params: {}, sel: 1, nextId: 2,
+  });
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || ejemplo() } catch { S = ejemplo() }
+  const P = () => Object.assign({}, M.PARAMETROS_BASE, S.params);
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch {} };
+  let editId = null;
+
+  // ----- selects -----
+  const fill = (sel, obj) => { sel.innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.nombre}</option>`).join('') };
+  fill($('f-tip'), M.TIPOLOGIAS); fill($('f-color'), M.COLORES); fill($('f-vidrio'), M.VIDRIOS);
+
+  function leerForm() {
+    return { tipologia: $('f-tip').value, cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
+      ancho: Math.max(100, +$('f-ancho').value || 0), alto: Math.max(100, +$('f-alto').value || 0),
+      color: $('f-color').value, vidrio: $('f-vidrio').value, mosquitero: $('f-mosq').checked };
+  }
+  function cargarForm(it) {
+    $('f-tip').value = it.tipologia; $('f-cod').value = it.cod || ''; $('f-cant').value = it.cantidad;
+    $('f-ancho').value = it.ancho; $('f-alto').value = it.alto; $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-mosq').checked = !!it.mosquitero;
+  }
+  function sugerirCodigo(tip) {
+    const pre = M.TIPOLOGIAS[tip].prefijo; let n = 1;
+    while (S.items.some(i => i.cod === pre + n)) n++;
+    return pre + n;
+  }
+
+  // ----- dibujo -----
+  function dibujar(it) {
+    const t = M.TIPOLOGIAS[it.tipologia];
+    const maxW = 220, maxH = 200, k = Math.min(maxW / it.ancho, maxH / it.alto);
+    const w = it.ancho * k, h = it.alto * k, x0 = 50 + (maxW - w) / 2, y0 = 14 + (maxH - h) / 2;
+    const fr = 7, ink = 'var(--ink)', mut = 'var(--muted)', acc = 'var(--accent)';
+    const col = M.COLORES[it.color] || {}; const marco = col.foliado ? 'var(--wood)' : ink;
+    let s = `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="${marco}" stroke-width="3"/>`;
+    const glass = (x, y, ww, hh) => `<rect x="${x}" y="${y}" width="${Math.max(ww, 1)}" height="${Math.max(hh, 1)}" fill="var(--accent-soft)" stroke="${mut}" stroke-width="1"/>`;
+    const ix = x0 + fr, iy = y0 + fr, iw = w - 2 * fr, ih = h - 2 * fr;
+    if (it.tipologia === 'pano') s += glass(ix, iy, iw, ih);
+    else if (it.tipologia.startsWith('corr')) {
+      const n = t.hojas, hw = iw / n;
+      for (let i = 0; i < n; i++) {
+        const x = ix + i * hw; s += glass(x + 3, iy + 3, hw - 6, ih - 6) + `<rect x="${x}" y="${iy}" width="${hw}" height="${ih}" fill="none" stroke="${marco}" stroke-width="1.5"/>`;
+        const cy = iy + ih / 2, dir = i % 2 ? -1 : 1, cx = x + hw / 2;
+        s += `<path d="M${cx - 14 * dir} ${cy} h${28 * dir} m${-6 * dir} -5 l${6 * dir} 5 l${-6 * dir} 5" fill="none" stroke="${acc}" stroke-width="1.6"/>`;
+      }
+    } else {
+      const n = t.hojas, hw = iw / n;
+      for (let i = 0; i < n; i++) {
+        const x = ix + i * hw; s += glass(x + 4, iy + 4, hw - 8, ih - 8) + `<rect x="${x}" y="${iy}" width="${hw}" height="${ih}" fill="none" stroke="${marco}" stroke-width="1.5"/>`;
+        const bis = (n === 1 || i === 0) ? x : x + hw, otro = bis === x ? x + hw : x;
+        if (it.tipologia === 'proy') s += `<path d="M${x} ${iy + ih} L${x + hw / 2} ${iy} L${x + hw} ${iy + ih}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+        else {
+          s += `<path d="M${otro} ${iy} L${bis} ${iy + ih / 2} L${otro} ${iy + ih}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+          if (it.tipologia.startsWith('osc')) s += `<path d="M${x} ${iy} L${x + hw / 2} ${iy + ih} L${x + hw} ${iy}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="2 3"/>`;
+        }
+      }
+    }
+    // cotas
+    const yb = y0 + h + 16, xl = x0 - 16;
+    s += `<path d="M${x0} ${yb} H${x0 + w} M${x0} ${yb - 4} v8 M${x0 + w} ${yb - 4} v8" stroke="${mut}" stroke-width="1" fill="none"/>`;
+    s += `<text x="${x0 + w / 2}" y="${yb + 14}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}">${it.ancho}</text>`;
+    s += `<path d="M${xl} ${y0} V${y0 + h} M${xl - 4} ${y0} h8 M${xl - 4} ${y0 + h} h8" stroke="${mut}" stroke-width="1" fill="none"/>`;
+    s += `<text x="${xl - 6}" y="${y0 + h / 2}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}" transform="rotate(-90 ${xl - 6} ${y0 + h / 2})">${it.alto}</text>`;
+    $('dibujo').innerHTML = s;
+  }
+
+  function preview() {
+    const it = leerForm(); const t = M.TIPOLOGIAS[it.tipologia];
+    $('l-mosq').hidden = !t.mosq;
+    dibujar(it);
+    const p = M.precioLista(it, P());
+    const rows = [['Básico', p.basico], ['Vidrio', p.vidrio]];
+    if (t.mosq && it.mosquitero) rows.push(['Mosquitero', p.mosq]);
+    $('p-desg').innerHTML = rows.map(([a, b]) => `<span>${a}</span><span class="num">${fmt(b)}</span>`).join('') +
+      `<span class="tot">USD x U</span><span class="num tot">${fmt(p.unitario)}</span>` +
+      (it.cantidad > 1 ? `<span class="muted">× ${it.cantidad}</span><span class="num muted">${fmt(p.unitario * it.cantidad)}</span>` : '') +
+      `<span class="muted">Con ${P().descuento === S.descuento ? '' : ''}${S.descuento}% dto.</span><span class="num muted">${fmt(p.unitario * it.cantidad * (1 - S.descuento / 100))}</span>`;
+  }
+
+  // ----- presupuesto -----
+  function render() {
+    const PP = Object.assign(P(), { descuento: S.descuento });
+    const tb = $('t-items');
+    if (!S.items.length) tb.innerHTML = `<tr><td colspan="6" class="muted">Todavía no hay aberturas. Cargá una a la izquierda y tocá "Agregar al presupuesto".</td></tr>`;
+    else tb.innerHTML = S.items.map(it => {
+      const p = M.precioLista(it, PP);
+      return `<tr class="${it.id === S.sel ? 'sel' : ''}"><td><strong>${it.cod || '—'}</strong><div class="desc">${M.descripcionWMaker(it)}</div></td>
+        <td class="num">${it.cantidad}</td><td class="mono" style="white-space:nowrap">${it.ancho} × ${it.alto}</td>
+        <td class="num">${fmt(p.unitario)}</td><td class="num">${fmt(p.unitario * it.cantidad)}</td>
+        <td style="white-space:nowrap"><button class="link" data-ed="${it.id}">Editar</button><button class="link" data-dup="${it.id}">Duplicar</button><button class="link del" data-del="${it.id}">Quitar</button></td></tr>`;
+    }).join('');
+    const uds = S.items.reduce((s, i) => s + i.cantidad, 0);
+    $('pres-cant').textContent = uds ? `${uds} unidad${uds > 1 ? 'es' : ''}` : '';
+    const T = M.totales(S.items, PP);
+    const coloc = S.coloc ?? T.colocacionSugerida, contra = S.contra ?? T.contramarcosSugeridos;
+    $('t-desc').value = S.descuento;
+    $('t-coloc').value = coloc; $('t-coloc').placeholder = T.colocacionSugerida;
+    $('t-contra').value = contra; $('t-contra').placeholder = T.contramarcosSugeridos;
+    const final = T.total + (+coloc || 0) + (+contra || 0);
+    $('t-tot').innerHTML = `
+      <span>Sub-total</span><span class="num">USD ${fmt(T.subtotal)}</span>
+      ${S.descuento ? `<span>Descuento ${S.descuento.toFixed(2)}%</span><span class="num">− USD ${fmt(T.descuento)}</span>` : ''}
+      <span class="big">Total</span><span class="num big">USD ${fmt(T.total)}</span>
+      <span class="muted">Básico</span><span class="num muted">USD ${fmt(T.basico)}</span>
+      <span class="muted">Vidrios</span><span class="num muted">USD ${fmt(T.vidrios)}</span>
+      ${T.mosquiteros ? `<span class="muted">Mosquiteros</span><span class="num muted">USD ${fmt(T.mosquiteros)}</span>` : ''}
+      <span class="sep"></span>
+      <span>Con colocación ${S.coloc == null ? '(sugerida)' : ''} y contramarcos ${S.contra == null ? '(sugeridos)' : ''}</span><span class="num"><strong>USD ${fmt(final)}</strong> + IVA</span>`;
+    $('doc').textContent = documento(PP, T, coloc, contra, final);
+    renderHetmo(); save();
+  }
+
+  function documento(PP, T, coloc, contra, final) {
+    const c = S.cliente, f = c.fecha ? c.fecha.split('-').reverse().map((x, i) => i === 0 ? +x : i === 1 ? +x : x).join('/') : '';
+    let s = `GH Aberturas S.R.L. · VIVIR MEJOR ES POSIBLE\nFecha: ${f}\nSres. ${c.nombre || ''}   Dir. ${c.dir || ''}\n\n`;
+    for (const it of S.items) {
+      const p = M.precioLista(it, PP);
+      s += `Tipo ${it.cod || ''}   Cant. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(p.unitario)}   Total ${fmt(p.unitario * it.cantidad)}\n`;
+      s += `Tipo ${it.cod || ''} (${it.ancho} x ${it.alto} mm): ${M.descripcionWMaker(it)}\n\n`;
+    }
+    if (S.descuento) s += `Sub-total : USD ${fmt(T.subtotal)}\nDescuento ${S.descuento.toFixed(2)}% : USD ${fmt(T.descuento)}\n`;
+    s += `Total : USD ${fmt(T.total)}\n\nBásico : USD ${fmt(T.basico)}\nVidrios : USD ${fmt(T.vidrios)}\n`;
+    if (T.mosquiteros) s += `Mosquiteros: USD ${fmt(T.mosquiteros)}\n`;
+    s += `\nNota : Colocacion USD ${fmt(+coloc || 0)} + contramarcos USD ${fmt(+contra || 0)} = USD ${fmt(final)} + I.V.A\n\n`;
+    s += `Forma de pago 60% adelanto, 40% a contraentrega y colocación. Plazo de entrega en color Blanco 60/80 días - Color 80/110 días. Precio del dolar tipo vendedor del Banco Nación del día de pago.\nEn caso de ser necesario IZAJE será cotizado aparte.`;
+    return s;
+  }
+
+  function renderHetmo() {
+    const sel = $('h-item'); const prev = +sel.value || S.sel;
+    sel.innerHTML = S.items.map(i => `<option value="${i.id}">${i.cod || '—'} · ${M.TIPOLOGIAS[i.tipologia].nombre} ${i.ancho}×${i.alto}</option>`).join('');
+    const it = S.items.find(i => i.id === prev) || S.items[0];
+    if (!it) { $('h-det').innerHTML = `<tr><td colspan="6" class="muted">Agregá una abertura al presupuesto para ver su despiece.</td></tr>`; $('h-res').innerHTML = ''; return }
+    sel.value = it.id;
+    const h = M.despieceHetmo(it, P()), PP = P();
+    $('h-det').innerHTML = h.detalle.map(d => `<tr><td class="mono">${d.cod}</td><td>${d.desc}</td><td class="num">${d.unidad === 'u' ? d.cant : d.cant.toFixed(2)} ${d.unidad}</td><td class="muted">${d.detalle}</td><td class="num">${fmt(d.precio)}</td><td class="num">${fmt(d.importe)}</td></tr>`).join('');
+    const G = h.grupos, mer = PP.mermaPerfiles, mg = 1 + PP.margen / 100;
+    const filas = [['Perfiles', G.perfiles, mer], ['Refuerzos', G.refuerzos, mer], ['Juntas', G.juntas, 1], ['Tornillería', G.tornilleria, 1], ['Accesorios', G.accesorios, 1],
+      ['Vidrios', G.vidrios, 1], ['Herraje', G.herraje, 1], ['Fabricación ventana', G.fabricacion, 1], ['Acristalamiento', G.acristalamiento, 1]];
+    $('h-res').innerHTML = filas.map(([n, c, m]) => `<tr><td>${n}</td><td class="num">${fmt(c)}</td><td class="num">${fmt(c * m)}</td><td class="num">${fmt(c * m * mg)}</td></tr>`).join('') +
+      `<tr><td><strong>Total por unidad</strong></td><td class="num"><strong>${fmt(h.compra)}</strong></td><td class="num"><strong>${fmt(h.venta1)}</strong></td><td class="num"><strong>${fmt(h.venta)}</strong></td></tr>`;
+  }
+
+  // ----- parámetros -----
+  function renderParams() {
+    const p = P();
+    $('params').innerHTML = Object.keys(PARAM_LABELS).map(k => `<label>${PARAM_LABELS[k]}<input type="number" step="any" id="p-${k}" data-k="${k}" value="${p[k]}"></label>`).join('');
+  }
+
+  // ----- validación -----
+  async function validar() {
+    let D; try { D = await (await fetch('wmaker_reales.json')).json() } catch { $('v-res').textContent = 'no se pudo cargar'; return }
+    const col = c => { c = (c || '').toLowerCase(); if (!c || c === '-' || c.startsWith('blanc')) return 'blanco'; if (c.includes('/')) return 'bic_golden'; if (c.includes('grafito')) return 'grafito'; if (c.includes('negr')) return 'negro'; if (c.includes('nogal')) return 'nogal'; return 'golden' };
+    const vid = v => { v = v.toLowerCase(); if (v.startsWith('dvh')) return v.includes('satin') ? 'dvh_sat' : 'dvh'; if (v.includes('float')) return 'float4'; if (v.includes('satin')) return 'sat4'; if (v.includes('simple laminado')) return 'lam33'; if (v.includes('simple')) return 'float5'; if (v.includes('lam')) return 'dvh_lam'; return 'dvh' };
+    const rows = [];
+    D.pano_fijo.forEach(r => { if (!/secc|trav/.test(r.vidrio)) rows.push(['pano', r]) });
+    D.corredizas.forEach(r => rows.push([r.hojas === '3' ? 'corr3' : 'corr2', r]));
+    D.practicables.forEach(r => { if (/curv/.test(r.vidrio) || /Osc1x2|A35x2|VA32/.test(r.cod)) return; const o = /osc/i.test(r.vidrio + r.cod); rows.push([(o ? 'osc' : 'abrir') + (r.hojas === '2' ? '2' : '1'), r]) });
+    D.proyectantes.forEach(r => rows.push(['proy', r])); D.puertas.forEach(r => rows.push([r.w > 2000 ? 'puerta2' : 'puerta1', r]));
+    const errs = [];
+    $('v-tab').innerHTML = rows.map(([tip, r]) => {
+      const p = M.precioLista({ tipologia: tip, ancho: r.w, alto: r.h, color: col(r.color), vidrio: vid(r.vidrio) }, P());
+      const real = r.basico + r.vid, est = p.basico + p.vidrio, e = (est - real) / real; errs.push(Math.abs(e));
+      const cls = Math.abs(e) < .05 ? 'e-ok' : Math.abs(e) < .12 ? 'e-mid' : 'e-bad';
+      return `<tr><td class="mono">${r.cod}</td><td>${M.TIPOLOGIAS[tip].nombre}</td><td class="mono">${r.w}×${r.h}</td><td class="muted">${r.color || '—'} · ${r.vidrio}</td><td class="num">${fmt(real)}</td><td class="num">${fmt(est)}</td><td class="num ${cls}">${e > 0 ? '+' : ''}${(e * 100).toFixed(1)}%</td></tr>`;
+    }).join('');
+    errs.sort((a, b) => a - b);
+    $('v-res').textContent = `${errs.length} ventanas · mitad a menos de ${(errs[errs.length >> 1] * 100).toFixed(1)}% · ${errs.filter(x => x < .1).length} a menos de 10%`;
+  }
+
+  // ----- eventos -----
+  ['f-tip', 'f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-mosq'].forEach(id => $(id).addEventListener('input', preview));
+  $('f-tip').addEventListener('change', () => { if (!editId) $('f-cod').value = sugerirCodigo($('f-tip').value) });
+  $('f-item').addEventListener('submit', e => {
+    e.preventDefault(); const it = leerForm(); if (!it.cod) it.cod = sugerirCodigo(it.tipologia);
+    if (editId) { Object.assign(S.items.find(i => i.id === editId), it); S.sel = editId; toast('Abertura actualizada') }
+    else { it.id = S.nextId++; S.items.push(it); S.sel = it.id; toast('Agregada al presupuesto') }
+    salirEdicion(); render();
+  });
+  function salirEdicion() { editId = null; $('b-guardar').textContent = 'Agregar al presupuesto'; $('b-cancelar').hidden = true; $('modo-chip').textContent = 'Nueva'; $('f-cod').value = sugerirCodigo($('f-tip').value); preview() }
+  $('b-cancelar').addEventListener('click', salirEdicion);
+  $('t-items').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.ed) { const it = S.items.find(i => i.id === +b.dataset.ed); editId = it.id; S.sel = it.id; cargarForm(it); $('b-guardar').textContent = 'Guardar cambios'; $('b-cancelar').hidden = false; $('modo-chip').textContent = 'Editando ' + (it.cod || ''); preview(); render(); $('f-ancho').focus() }
+    if (b.dataset.dup) { const it = S.items.find(i => i.id === +b.dataset.dup); const n = Object.assign({}, it, { id: S.nextId++, cod: sugerirCodigo(it.tipologia) }); S.items.push(n); S.sel = n.id; render(); toast('Duplicada como ' + n.cod) }
+    if (b.dataset.del) { S.items = S.items.filter(i => i.id !== +b.dataset.del); if (editId === +b.dataset.del) salirEdicion(); render() }
+  });
+  $('t-desc').addEventListener('input', e => { S.descuento = Math.max(0, +e.target.value || 0); render(); preview() });
+  $('t-coloc').addEventListener('input', e => { S.coloc = e.target.value === '' ? null : +e.target.value; render() });
+  $('t-contra').addEventListener('input', e => { S.contra = e.target.value === '' ? null : +e.target.value; render() });
+  ['c-nombre', 'c-dir', 'c-fecha'].forEach(id => $(id).addEventListener('input', e => { S.cliente[id.slice(2) === 'nombre' ? 'nombre' : id.slice(2)] = e.target.value; render() }));
+  $('b-copiar').addEventListener('click', () => {
+    const txt = $('doc').textContent;
+    navigator.clipboard.writeText(txt).then(() => toast('Presupuesto copiado'), () => { $('d-doc').open = true; const r = document.createRange(); r.selectNodeContents($('doc')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Texto seleccionado: copialo con Ctrl+C') });
+  });
+  $('b-nuevo').addEventListener('click', () => { $('confirm-nuevo').hidden = false });
+  $('b-no').addEventListener('click', () => { $('confirm-nuevo').hidden = true });
+  $('b-si').addEventListener('click', () => { const params = S.params; S = { cliente: { nombre: '', dir: '', fecha: new Date().toISOString().slice(0, 10) }, items: [], descuento: P().descuento, coloc: null, contra: null, params, sel: null, nextId: 1 }; $('confirm-nuevo').hidden = true; initCliente(); salirEdicion(); render() });
+  $('h-item').addEventListener('change', renderHetmo);
+  $('params').addEventListener('input', e => { const k = e.target.dataset.k; if (!k) return; const v = parseFloat(e.target.value); if (isNaN(v)) return; S.params[k] = v; render(); preview(); validar() });
+  $('b-reset').addEventListener('click', () => { S.params = {}; renderParams(); render(); preview(); validar(); toast('Parámetros restablecidos') });
+
+  let tt; function toast(m) { const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 1800) }
+  function initCliente() { $('c-nombre').value = S.cliente.nombre || ''; $('c-dir').value = S.cliente.dir || ''; $('c-fecha').value = S.cliente.fecha || '' }
+
+  initCliente(); renderParams();
+  const first = S.items.find(i => i.id === S.sel) || { tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: true };
+  cargarForm(Object.assign({}, first, { cod: '' })); $('f-cod').value = sugerirCodigo(first.tipologia);
+  preview(); render(); validar();
+})();
+</script>
