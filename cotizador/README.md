@@ -34,3 +34,42 @@ Son aproximaciones. Las curvas tienen un piso: las ventanas chicas cuestan propo
 
 ## Pendiente
 - Listas de costos de Hetmo (perfiles, herrajes, vidrios) para pasar de fórmulas por m² a un cálculo por despiece.
+
+## Hetmo: lo que muestran las capturas (`capturas/`)
+
+### Catálogo de fichas técnicas (MUCHTEK)
+| Serie | Fichas vistas |
+|---|---|
+| EFFICIENT ventana/puerta | 108 DC 66-85, 109 DC 66-100. Plegables 136–148 (Ap. Int./Ext. GU, ROTO, con o sin solera). 9231–9233 DC 55-69 / 55-85 / 55-100 |
+| EFFICIENT pivotante | 123–128: M.EJE 200/300/400, Ap. Int./Ext. |
+| PRIME 74 (corrediza) | 175: 2 guías. 176: 3 guías. 177: 3 guías c/mosq 11251/11033 |
+| PRIME 90/44 (corrediza) | 171: 2 guías. 172: 3 guías. 174/178: 3 guías c/mosq. 179: 4 guías. 180/181: 4 guías c/mosq. La 173 está discontinuada |
+| MOSQUITEROS | 901/902: 11035 sin/con marco. 905: 11030. 907/908: 31016. 909: 31017. 911/912: 11032. 9011/9021: 11035 con solera. 9072–9076: fijos 31017/91305/91304/31016. 90174/90274/901174/902174: 11033. Las 9070/9071 están descatalogadas |
+
+Otras series que aparecen: JUMBO R:2.5 mm, JUMBO R:3, MARCO MINISLIDE 2 GUÍAS, ADVANCE, ECOLIFE, EVOLUTION, LÍNEA ECO.
+
+### Análisis de importes: cómo arma el precio
+Cada partida tiene 4 columnas: **Compra → Venta 1 → % margen → Venta**.
+- Venta = Venta 1 × (1 + margen). La tarifa general es del **55%**.
+- Partidas:
+  - Ventana: perfiles, refuerzos, juntas, tornillería, accesorios.
+  - Vidrios y paneles.
+  - Premarco y tapajuntas.
+  - Herraje.
+  - Fabricación: mano de obra de ventana y acristalamiento.
+  - Montaje.
+  - Persiana (sin uso en los ejemplos).
+- Compra → Venta 1:
+  - Ejemplo 1: perfiles y refuerzos ×1.07 (¿merma o desperdicio?); el resto ×1.00.
+  - Ejemplo 2: perfiles, refuerzos y tapajuntas ×1.3375 (= 1.07 × 1.25); vidrio ×1.28; el resto ×1.25.
+- Montaje: arranca en 0 en Compra y aparece recién en Venta 1. Ejemplo 1: 176.8; ejemplo 2: 760.75.
+- Comprobación con el ejemplo 1:
+  - Total compra 979.77, igual a la suma de la columna Compra.
+  - Total venta 1 1188.03, igual a la suma de Venta 1.
+  - Total venta 1841.45, igual a la suma de la columna Venta.
+
+### Cabecera del presupuesto
+- Tarifa "2 TARIFA GENERAL 55%", IVA 21%, divisa USD.
+- Desglose de importes: "Carpintería + Vidrios + Monobloc + …".
+- Montaje: "2 INSTALACIÓN BÁSICA".
+- Amarre a obra: "Agujero 6 mm".
