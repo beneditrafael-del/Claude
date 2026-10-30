@@ -1,0 +1,45 @@
+Codigo,Ancho,Alto,Hojas,Vidrio,Total (USD),Basico (USD),Vidrio (USD),Fuente
+C1,1100,1200,2,DVH,993.8,705.7,126.64,WMaker real (neto mosquitero)
+C3,2000,1100,2,DVH,1278.26,828.43,237.47,WMaker real (neto mosquitero)
+C7,850,950,2,DVH,501.88,436.45,65.43,WMaker real
+C11,1120,1340,2,DVH,696.74,548.42,148.32,WMaker real
+C13,1290,1035,2,DVH,790.85,550.01,129.23,WMaker real (neto mosquitero)
+C15,1045,1085,2,DVH,733.86,527.02,104.23,WMaker real (neto mosquitero)
+C17x2,1400,950,2,DVH,627.93,499.8,128.13,WMaker real -- VENDIDA
+C19,1000,1025,2,DVH,558.11,466.98,91.13,WMaker real
+C21,1130,1040,2,DVH,594.3,484.78,109.52,WMaker real
+C23,1860,965,2,DVH,930.67,612.06,184.32,WMaker real (neto mosquitero)
+C25,1500,1045,2,DVH,686.75,528.82,157.93,WMaker real
+C29,1400,1100,2,Vidrio simple,634.23,534.4,99.83,WMaker real
+C31,1170,1280,2,DVH,838.04,689.42,148.62,WMaker real
+C33,1100,1210,2,Vidrio simple satinado (a confirmar codigo),634.02,529.72,104.3,WMaker real
+C35x2,1900,1910,2,DVH,1185.72,753.76,431.96,WMaker real
+C35x2b,1900,1910,2,Laminado,1258.97,753.76,505.21,WMaker real
+C37,1150,1070,2,DVH,608.72,492.48,116.24,WMaker real
+C41,2310,1945,2,Vidrio simple laminado,1173.94,873.19,300.75,WMaker real
+C43,3780,2230,3,DVH,2769.5,1674.23,1095.27,WMaker real
+C43b,3780,2230,3,Laminado,2955.23,1674.23,1281.0,WMaker real
+C45,1700,1155,2,Vidrio simple,888.71,754.23,134.48,WMaker real
+C47,2240,2030,2,"DVH (revisar seguridad, hoja>1.5m2)",1422.0,862.44,559.56,WMaker real
+C47b,2240,2030,2,Laminado,1517.06,862.44,654.62,WMaker real
+C5x2,3130,2229,3,DVH,3485.0,1837.31,1647.69,WMaker real
+C1(doc viejo),1100,1200,2,DVH,809.33,,,"PDF Doc2 - SUPERADO por dato real WMaker arriba, no usar"
+C2,1445,1290,2,Laminado,808.28,585.13,223.15,PDF total + formula validada
+C3(doc viejo),2000,1100,2,Laminado,1092.39,,,"PDF Doc2 - SUPERADO por dato real WMaker arriba, no usar"
+C6,910,1000,2,DVH,529.42,452.13,77.29,WMaker real
+C10,1250,1470,2,DVH,778.83,587.61,191.22,WMaker real
+C12,1730,1130,2,DVH,778.76,571.58,207.18,WMaker real
+C14,1180,1090,2,DVH,779.5,546.29,123.08,WMaker real (neto mosquitero 110.13)
+C16,1145,1145,2,DVH,642.65,516.62,126.03,WMaker real
+C20,1020,1120,2,DVH,739.13,530.56,104.83,WMaker real (neto mosquitero 103.74)
+C22,1100,1000,2,DVH,574.61,474.16,100.45,WMaker real
+C26,1590,1000,2,DVH,867.4,583.2,160.19,WMaker real (neto mosquitero 124.01)
+C28,1850,1000,2,DVH,927.63,735.75,191.88,WMaker real (DVH confirmado)
+C32x2,1900,1300,2,DVH,1095.02,819.91,275.11,WMaker real
+C34,1990,1390,Roble Dorado (Golden Oak),DVH,1131.27,833.01,298.26,"WMaker real (color y DVH confirmados; diferencia vs formula sin explicar, se mantiene el dato real)"
+C36,1510,1110,2,Float 4mm,593.75,549.41,44.34,WMaker real
+C42,1570,2050,2,DVH,1151.07,778.21,372.86,WMaker real
+C44,2000,2045,2,Laminado/Templado,2092.58,1178.07,579.41,WMaker real (neto mosquitero 335.10)
+C46,1390,1390,2,Float 4mm,651.58,598.8,52.78,WMaker real
+C17 (disponible),1400,950,2,DVH,627.93,499.8,128.13,"WMaker real (misma unidad y precio que C17x2, que esta vendida)"
+C30,1205,1230,2,Satinado,635.38,546.26,89.12,WMaker real
