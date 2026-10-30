@@ -73,3 +73,17 @@ Cada partida tiene 4 columnas: **Compra → Venta 1 → % margen → Venta**.
 - Desglose de importes: "Carpintería + Vidrios + Monobloc + …".
 - Montaje: "2 INSTALACIÓN BÁSICA".
 - Amarre a obra: "Agujero 6 mm".
+
+## Artículos de almacén de Hetmo (`datos/hetmo_articulos_almacen.csv`)
+Sale del PDF "Articulos de almacen con precios HETMO" (359 páginas, unos 20.000 artículos), que está en el Drive.
+- Columnas: proveedor, familia, código, descripción, color y precio.
+- En el PDF original la descripción y el color se superponen, así que algunas descripciones quedan cortadas.
+- **Perfiles Tecnoperfiles:** el precio parece ser USD por metro.
+  - Ejemplos en blanco: Marco DC 5,13; Hoja ap. int. DC 85 5,67; Hoja Prime 74 4,91.
+  - El código tiene 9 dígitos. Los dígitos 6 a 9 son el color: 1000 = Blanco, 4010 = Golden Oak, 1011 = M.Blanca F.Golden Oak, 3110 = Gris Grafito, 4100 = Nogal.
+- **Recargo por color en perfiles** (mediana contra blanco):
+  - Golden Oak, Nogal y Gris Grafito: ×1,70.
+  - Blanco interior con color exterior: ×1,38.
+  - Jet Black: ×1,82.
+- **Vidrios:** el precio parece estar en **pesos por m²**. Ejemplos: 4/12/4 incoloro 34.344; 3+3/9/4 72.095; float 4 mm 17.172.
+- **Herrajes** (GU, ROTO, VBH, REZE, VORNE, Häusen, Magnum): precio por unidad.
