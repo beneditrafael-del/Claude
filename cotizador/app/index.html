@@ -122,7 +122,8 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
         <label>Alto (mm)<input id="f-alto" type="number" min="300" step="5" value="1100"></label>
         <label class="span2">Color<select id="f-color"></select></label>
         <label class="span2">Vidrio<select id="f-vidrio"></select></label>
-        <label class="check span2" id="l-mosq"><input type="checkbox" id="f-mosq"> Con mosquitero</label>
+        <label>Dto. renglón %<input id="f-dto" type="number" min="0" max="90" step="0.5" value="0"></label>
+        <label class="check" id="l-mosq"><input type="checkbox" id="f-mosq"> Con mosquitero</label>
         <div class="row span4">
           <button type="submit" class="prim" id="b-guardar">Agregar al presupuesto</button>
           <button type="button" id="b-cancelar" hidden>Cancelar edición</button>
@@ -145,7 +146,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
         <tbody id="t-items"></tbody>
       </table></div>
       <div class="minis">
-        <label>Descuento %<input id="t-desc" type="number" min="0" max="90" step="1"></label>
+        <label>Dto. general %<input id="t-desc" type="number" min="0" max="90" step="0.5"></label>
         <label>Dólar vidrios ($)<input id="t-tc" type="number" min="1" step="5"></label>
         <label class="check" style="align-self:end"><input type="checkbox" id="t-montaje"> Incluir montaje</label>
       </div>
@@ -228,11 +229,11 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   function leerForm() {
     return { tipologia: $('f-tip').value, cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
       ancho: Math.max(300, Math.round(+$('f-ancho').value || 0)), alto: Math.max(300, Math.round(+$('f-alto').value || 0)),
-      color: $('f-color').value, vidrio: $('f-vidrio').value, mosquitero: $('f-mosq').checked };
+      color: $('f-color').value, vidrio: $('f-vidrio').value, mosquitero: $('f-mosq').checked, descuento: Math.min(90, Math.max(0, +$('f-dto').value || 0)) };
   }
   function cargarForm(it) {
     $('f-tip').value = it.tipologia; $('f-cod').value = it.cod || ''; $('f-cant').value = it.cantidad;
-    $('f-ancho').value = it.ancho; $('f-alto').value = it.alto; $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-mosq').checked = !!it.mosquitero;
+    $('f-ancho').value = it.ancho; $('f-alto').value = it.alto; $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-mosq').checked = !!it.mosquitero; $('f-dto').value = it.descuento || 0;
   }
   function sugerirCodigo(tip) { const pre = M.TIPOLOGIAS[tip].prefijo; let n = 1; while (S.items.some(i => i.cod === pre + n)) n++; return pre + n }
   const chip = t => M.TIPOLOGIAS[t].exacto ? '<span class="chip">Igual a Hetmo</span>' : '<span class="chip warn">Aproximado</span>';
@@ -285,7 +286,8 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     $('p-chip').innerHTML = chip(it.tipologia);
     $('p-desg').innerHTML = rows.map(([a, b]) => `<span>${a}</span><span class="num">${fmt(b)}</span>`).join('') +
       `<span class="tot">USD x U</span><span class="num tot">${fmt(p.unitario)}</span>` +
-      (it.cantidad > 1 ? `<span class="muted">× ${it.cantidad}</span><span class="num muted">${fmt(p.unitario * it.cantidad)}</span>` : '') +
+      (it.descuento ? `<span>Con ${it.descuento}% dto.</span><span class="num">${fmt(p.unitario * (1 - it.descuento / 100))}</span>` : '') +
+      (it.cantidad > 1 ? `<span class="muted">× ${it.cantidad}</span><span class="num muted">${fmt(p.unitario * (1 - (it.descuento || 0) / 100) * it.cantidad)}</span>` : '') +
       `<span class="muted">Costo de compra</span><span class="num muted">${fmt(p.hetmo.totalCompra)}</span>` +
       `<span class="muted">Referencia WMaker</span><span class="num muted">${fmt(wm.unitario)}</span>`;
     $('p-nota').innerHTML = `<small>Ficha ${t.ficha}. ${t.exacto ? 'Calcula igual que Hetmo.' : 'Armada por analogía con las fichas verificadas: tomala como estimación.'}</small>`;
@@ -300,7 +302,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       const cl = it.id === S.sel ? 'sel' : '';
       return `<tr class="${cl} sin-borde"><td><strong>${it.cod || '—'}</strong> ${M.TIPOLOGIAS[it.tipologia].exacto ? '' : '<span class="chip warn">aprox.</span>'}</td>
         <td class="num">${it.cantidad}</td><td class="mono" style="white-space:nowrap">${it.ancho} × ${it.alto}</td>
-        <td class="num">${fmt(p.unitario)}</td><td class="num">${fmt(p.unitario * it.cantidad)}</td>
+        <td class="num">${fmt(p.unitario * (1 - (it.descuento || 0) / 100))}${it.descuento ? `<div class="desc">−${it.descuento}% de ${fmt(p.unitario)}</div>` : ''}</td><td class="num">${fmt(p.unitario * (1 - (it.descuento || 0) / 100) * it.cantidad)}</td>
         <td style="white-space:nowrap"><button class="link" data-ed="${it.id}">Editar</button><button class="link" data-dup="${it.id}">Duplicar</button><button class="link del" data-del="${it.id}">Quitar</button></td></tr><tr class="${cl}"><td colspan="6" class="desc" style="padding-top:0">${M.descripcion(it)}</td></tr>`;
     }).join('');
     const uds = S.items.reduce((s, i) => s + i.cantidad, 0);
@@ -308,7 +310,9 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     $('t-desc').value = PP.descuento; $('t-tc').value = PP.tipoCambio; $('t-montaje').checked = !!PP.incluirMontaje;
     const T = M.totales(S.items, PP);
     $('t-tot').innerHTML = `
-      ${PP.descuento ? `<span>Sub-total</span><span class="num">USD ${fmt(T.subtotal)}</span><span>Descuento ${PP.descuento}%</span><span class="num">− USD ${fmt(T.descuento)}</span>` : ''}
+      ${T.lista - T.total > 0.005 ? `<span>Precio Hetmo</span><span class="num">USD ${fmt(T.lista)}</span>` : ''}
+      ${T.lista - T.subtotal > 0.005 ? `<span>Dto. por renglón</span><span class="num">− USD ${fmt(T.lista - T.subtotal)}</span>` : ''}
+      ${PP.descuento ? `<span>Dto. general ${PP.descuento}%</span><span class="num">− USD ${fmt(T.descuento)}</span>` : ''}
       <span class="big">Total</span><span class="num big">USD ${fmt(T.total)}</span>
       <span class="muted">Carpintería</span><span class="num muted">USD ${fmt(T.carpinteria)}</span>
       <span class="muted">Vidrios</span><span class="num muted">USD ${fmt(T.vidrios)}</span>
@@ -327,7 +331,8 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     let s = `GH Aberturas S.R.L.\nFecha: ${f}\nSres. ${c.nombre || ''}   Dir. ${c.dir || ''}\n\n`;
     for (const it of S.items) {
       const p = M.precio(it, PP);
-      s += `${it.cod || ''}   Uds. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(p.unitario)}   Total ${fmt(p.unitario * it.cantidad)}\n${M.descripcion(it)}\n\n`;
+      const u = p.unitario * (1 - (it.descuento || 0) / 100);
+      s += `${it.cod || ''}   Uds. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(u)}   Total ${fmt(u * it.cantidad)}\n${M.descripcion(it)}\n\n`;
     }
     if (PP.descuento) s += `Sub-total : USD ${fmt(T.subtotal)}\nDescuento ${PP.descuento}% : USD ${fmt(T.descuento)}\n`;
     s += `Total : USD ${fmt(T.total)} + I.V.A.\n\nCarpintería : USD ${fmt(T.carpinteria)}\nVidrios : USD ${fmt(T.vidrios)}\n`;
@@ -367,7 +372,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   }
 
   // eventos
-  ['f-tip', 'f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-mosq'].forEach(id => $(id).addEventListener('input', preview));
+  ['f-tip', 'f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-mosq', 'f-dto'].forEach(id => $(id).addEventListener('input', preview));
   $('f-tip').addEventListener('change', () => { if (!editId) $('f-cod').value = sugerirCodigo($('f-tip').value) });
   $('f-item').addEventListener('submit', e => {
     e.preventDefault(); const it = leerForm(); if (!it.cod) it.cod = sugerirCodigo(it.tipologia);

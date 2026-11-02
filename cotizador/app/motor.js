@@ -310,10 +310,11 @@
 
   function totales(items, P) {
     P = Object.assign({}, PARAMETROS_BASE, P || {});
-    const T = { subtotal: 0, carpinteria: 0, vidrios: 0, montaje: 0, mosq: 0, unidades: 0, compra: 0 };
+    const T = { lista: 0, subtotal: 0, carpinteria: 0, vidrios: 0, montaje: 0, mosq: 0, unidades: 0, compra: 0 };
     for (const it of items) {
-      const p = precio(it, P), q = it.cantidad || 1;
-      T.subtotal += p.unitario * q; T.carpinteria += p.carpinteria * q; T.vidrios += p.vidrios * q; T.montaje += p.montaje * q; T.mosq += p.mosq * q; T.unidades += q;
+      const p = precio(it, P), q = (it.cantidad || 1) * (1 - (it.descuento || 0) / 100);
+      T.lista += p.unitario * (it.cantidad || 1);
+      T.subtotal += p.unitario * q; T.carpinteria += p.carpinteria * q; T.vidrios += p.vidrios * q; T.montaje += p.montaje * q; T.mosq += p.mosq * q; T.unidades += it.cantidad || 1;
       T.compra += p.hetmo.totalCompra * q;
     }
     const f = 1 - P.descuento / 100;
