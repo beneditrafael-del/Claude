@@ -336,7 +336,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       ${g.dtoRenglon > 0.005 ? `<span>Dto. por renglón</span><span class="num">− USD ${fmt(g.dtoRenglon)}</span>` : ''}
       ${g.dtoRubros > 0.005 ? `<span>Dto. por rubro</span><span class="num">− USD ${fmt(g.dtoRubros)}</span>` : ''}
       ${g.dtoGeneral > 0.005 ? `<span>Dto. general</span><span class="num">− USD ${fmt(g.dtoGeneral)}</span>` : ''}
-      <span><strong>Subtotal${conIva ? ' sin IVA' : ''}</strong></span><span class="num"><strong>USD ${fmt(g.total)}</strong></span>
+      <span><strong>${conIva ? 'Neto antes de IVA' : 'Total sin IVA'}</strong></span><span class="num"><strong>USD ${fmt(g.total)}</strong></span>
       ${conIva ? `<span>IVA ${PP.iva}%</span><span class="num">USD ${fmt(g.iva)}</span><span><strong>Total con IVA</strong></span><span class="num"><strong>USD ${fmt(g.totalFinal)}</strong></span>` : ''}`;
     $('t-tot').innerHTML = (T.hayCon ? bloque(T.haySin ? 'Con IVA' : 'Presupuesto', T.grupos.con, true) : '') + (T.haySin ? bloque('Sin IVA', T.grupos.sin, false) : '') + `
       <span class="sep"></span>
