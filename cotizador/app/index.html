@@ -104,6 +104,9 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
 .sec .checks { grid-column: 1 / -1; display: flex; gap: 6px 16px; flex-wrap: wrap }
 @media (max-width: 520px) { .sec { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
 .form .secs { grid-column: 1 / -1 }
+.acciones { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin: -4px 0 16px }
+.num-pres { font-family: var(--f-display); font-size: 1.15rem; display: flex; gap: 8px; align-items: center }
+.aviso { background: var(--panel); border: 1px solid var(--warn); border-radius: var(--r); padding: 12px 14px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between }
 </style>
 
 <div class="wrap">
@@ -118,6 +121,20 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       <label>Fecha<input id="c-fecha" type="date"></label>
     </div>
   </header>
+  <div class="acciones">
+    <div class="num-pres"><span class="muted">Presupuesto</span> <strong id="pres-num">nuevo</strong> <span id="pres-dirty" class="chip warn" hidden>Sin guardar</span></div>
+    <div class="row">
+      <label class="check" style="text-transform:none">Estado <select id="pres-estado" style="width:auto"><option value="borrador">Borrador</option><option value="enviado">Enviado</option><option value="aceptado">Aceptado</option><option value="perdido">Perdido</option></select></label>
+      <button type="button" class="prim" id="b-nuevo">Nuevo presupuesto</button>
+      <button type="button" id="b-guardar-pres">Guardar</button>
+      <button type="button" id="b-pdf">PDF para el cliente</button>
+      <button type="button" id="b-pdf-int">PDF interno con costos</button>
+    </div>
+  </div>
+  <div class="aviso" id="confirm-nuevo" hidden>
+    <span>Este presupuesto tiene cambios sin guardar.</span>
+    <div class="row"><button type="button" class="prim" id="b-nuevo-guardar">Guardar y seguir</button><button type="button" id="b-nuevo-descartar">Descartar cambios</button><button type="button" id="b-nuevo-cancelar">Cancelar</button></div>
+  </div>
 
   <div class="grid">
     <section class="card" aria-labelledby="h-nueva">
@@ -185,14 +202,24 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       </fieldset>
       <div class="totales" id="t-tot"></div>
       <div class="row">
-        <button type="button" class="prim" id="b-copiar">Copiar presupuesto</button>
-        <button type="button" id="b-nuevo">Presupuesto nuevo</button>
-        <span id="confirm-nuevo" hidden><span class="muted">¿Borrar todo?</span> <button type="button" id="b-si">Sí, borrar</button> <button type="button" id="b-no">No</button></span>
+        <button type="button" id="b-copiar">Copiar como texto</button>
       </div>
     </section>
   </div>
 
-  <details class="card" id="d-hetmo" open>
+  <details class="card" id="d-lista" open>
+    <summary>Presupuestos guardados <span class="muted" id="l-info" style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400"></span></summary>
+    <div class="in">
+      <div class="row"><label style="flex:1 1 260px">Buscar por cliente, obra o número<input id="l-buscar" placeholder="Ej.: Gandara"></label>
+        <label style="flex:0 1 200px">Estado<select id="l-estado"><option value="">Todos</option><option value="borrador">Borrador</option><option value="enviado">Enviado</option><option value="aceptado">Aceptado</option><option value="perdido">Perdido</option></select></label></div>
+      <div class="tabla"><table>
+        <thead><tr><th>N°</th><th>Cliente</th><th>Fecha</th><th class="num">Aberturas</th><th class="num">A pagar USD</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="l-tab"></tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <details class="card" id="d-hetmo">
     <summary>Análisis de importes y despiece <span id="h-chip"></span></summary>
     <div class="in">
       <div class="row"><label style="flex:1 1 260px">Abertura<select id="h-item"></select></label></div>
@@ -228,6 +255,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
 </div>
 <div class="toast" id="toast" hidden></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="motor.js"></script>
 <script>
 (() => {
@@ -333,14 +361,17 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   });
 
   // ----- dibujo -----
-  function dibujar(it) {
+  const PAL_UI = { ink: 'var(--ink)', mut: 'var(--muted)', acc: 'var(--accent)', wood: 'var(--wood)', glass: 'var(--accent-soft)' };
+  const PAL_PDF = { ink: '#1b2422', mut: '#6b7975', acc: '#0e6a64', wood: '#a8712f', glass: '#dcefec' };
+  function dibujar(it) { $('dibujo').innerHTML = svgPlano(it, PAL_UI) }
+  function svgPlano(it, pal) {
     const { div, secciones: R } = M.secciones(it);
     const maxW = 220, maxH = 200, k = Math.min(maxW / it.ancho, maxH / it.alto);
     const w = it.ancho * k, h = it.alto * k, x0 = 54 + (maxW - w) / 2, y0 = 12 + (maxH - h) / 2;
-    const ink = 'var(--ink)', mut = 'var(--muted)', acc = 'var(--accent)';
-    const marco = it.color && it.color !== 'blanco' ? 'var(--wood)' : ink;
+    const ink = pal.ink, mut = pal.mut, acc = pal.acc;
+    const marco = it.color && it.color !== 'blanco' ? pal.wood : ink;
     let s = `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="${marco}" stroke-width="3"/>`;
-    const glass = (x, y, ww, hh) => `<rect x="${x}" y="${y}" width="${Math.max(ww, 1)}" height="${Math.max(hh, 1)}" fill="var(--accent-soft)" stroke="${mut}" stroke-width="1"/>`;
+    const glass = (x, y, ww, hh) => `<rect x="${x}" y="${y}" width="${Math.max(ww, 1)}" height="${Math.max(hh, 1)}" fill="${pal.glass}" stroke="${mut}" stroke-width="1"/>`;
     const tri = (pts, dash) => `<path d="M${pts[0]} L${pts[1]} L${pts[2]}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="${dash}"/>`;
     const manija = (x, y, vert) => vert ? `<rect x="${x - 2}" y="${y - 7}" width="4" height="14" rx="1.5" fill="${ink}"/>` : `<rect x="${x - 7}" y="${y - 2}" width="14" height="4" rx="1.5" fill="${ink}"/>`;
     let ox = x0, oy = y0;
@@ -390,7 +421,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     s += `<text x="${x0 + w / 2}" y="${yb + 12}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}">${it.ancho}</text>`;
     s += `<path d="M${xl} ${y0} V${y0 + h} M${xl - 4} ${y0} h8 M${xl - 4} ${y0 + h} h8" stroke="${mut}" stroke-width="1" fill="none"/>`;
     s += `<text x="${xl - 6}" y="${y0 + h / 2}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}" transform="rotate(-90 ${xl - 6} ${y0 + h / 2})">${it.alto}</text>`;
-    $('dibujo').innerHTML = s;
+    return s;
   }
 
   const chip = it => M.esExacto(it) ? '<span class="chip">Igual a Hetmo</span>' : '<span class="chip warn">Aproximado</span>';
@@ -443,7 +474,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       ${T.mosq > 0.005 ? `<span class="muted">Mosquiteros (estimado)</span><span class="num muted">USD ${fmt(T.mosq)}</span>` : ''}
       <span class="muted">Costo de compra</span><span class="num muted">USD ${fmt(T.compra)}</span>
       <span class="muted">Margen sobre costo</span><span class="num muted">USD ${fmt(T.total - T.compra)}</span>`;
-    renderHetmo(); save();
+    renderHetmo(); save(); marcarCambios();
   }
 
   function documento() {
@@ -497,6 +528,223 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     $('v-res').textContent = maxd < .001 ? '4 de 4 ventanas iguales a Hetmo' : `diferencia máxima ${(maxd * 100).toFixed(2)}%`;
   }
 
+
+  // ----- presupuestos guardados -----
+  // En claude.ai se guardan en la base compartida del cotizador (todos los que tienen acceso ven los mismos);
+  // en el archivo suelto, en este navegador.
+  const ESTADOS = { borrador: 'Borrador', enviado: 'Enviado', aceptado: 'Aceptado', perdido: 'Perdido' };
+  const contenido = () => JSON.stringify({ cliente: S.cliente, items: S.items, params: S.params, estado: S.estado || 'borrador' });
+  let guardadoComo = S.guardadoComo || null;
+  function marcarCambios() {
+    const sucio = S.items.length > 0 && contenido() !== guardadoComo;
+    $('pres-dirty').hidden = !sucio;
+    $('pres-num').textContent = S.numero ? 'N° ' + String(S.numero).padStart(4, '0') : 'nuevo';
+    $('pres-estado').value = S.estado || 'borrador';
+    return sucio;
+  }
+  const Archivo = {
+    modo: 'local', lista: [], col: null, puedeEscribir: true,
+    async init() {
+      const db = window.claude && window.claude.use ? await window.claude.use('db') : null;
+      if (db) {
+        this.modo = 'db'; this.col = db.collection('presupuestos');
+        const usr = await window.claude.use('user');
+        const w = usr && usr.can ? await usr.can('data.write') : null;
+        if (w === false) this.puedeEscribir = false;
+        $('l-info').textContent = 'Cargando…';
+        const t = setTimeout(() => { $('l-info').textContent = 'No se pudo conectar todavía con la base; sigue intentando.' }, 10000);
+        this.col.onSnapshot(snap => {
+          if (!snap.metadata.fromCache) clearTimeout(t);
+          this.lista = snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+          renderLista();
+        }, err => { clearTimeout(t); $('l-info').textContent = 'No se pudo leer la base (' + err.code + ').' });
+      } else {
+        try { this.lista = JSON.parse(localStorage.getItem('gh-presupuestos') || '[]') } catch { this.lista = [] }
+        renderLista();
+      }
+    },
+    proximoNumero() { return this.lista.reduce((m, p) => Math.max(m, +p.numero || 0), 0) + 1 },
+    async guardar(cuerpo) {
+      if (this.modo === 'db') {
+        const ref = cuerpo.id ? this.col.doc(cuerpo.id) : this.col.doc();
+        const body = Object.assign({}, cuerpo); delete body.id;
+        await ref.set(body); return ref.id;
+      }
+      const id = cuerpo.id || 'p' + Date.now().toString(36);
+      const c = Object.assign({}, cuerpo, { id });
+      const i = this.lista.findIndex(p => p.id === id);
+      if (i >= 0) this.lista[i] = c; else this.lista.push(c);
+      try { localStorage.setItem('gh-presupuestos', JSON.stringify(this.lista)) } catch { throw { code: 'local', message: 'No hay espacio en este navegador' } }
+      renderLista(); return id;
+    },
+    async borrar(id) {
+      if (this.modo === 'db') return this.col.doc(id).delete();
+      this.lista = this.lista.filter(p => p.id !== id);
+      try { localStorage.setItem('gh-presupuestos', JSON.stringify(this.lista)) } catch {}
+      renderLista();
+    },
+  };
+
+  async function guardarPresupuesto() {
+    if (!S.items.length) { toast('Agregá al menos una abertura antes de guardar'); return false }
+    if (!Archivo.puedeEscribir) { toast('Tenés acceso de solo lectura: no podés guardar'); return false }
+    const ahora = new Date().toISOString();
+    if (!S.numero) S.numero = Archivo.proximoNumero();
+    const T = M.totales(S.items, P());
+    const cuerpo = { id: S.docId || undefined, numero: S.numero, estado: S.estado || 'borrador', cliente: S.cliente, items: S.items, params: S.params,
+      resumen: { totalPagar: Math.round(T.totalPagar * 100) / 100, unidades: T.unidades }, creado: S.creado || ahora, actualizado: ahora };
+    try {
+      S.docId = await Archivo.guardar(cuerpo); S.creado = cuerpo.creado;
+      guardadoComo = contenido(); S.guardadoComo = guardadoComo; save(); marcarCambios();
+      toast('Presupuesto N° ' + String(S.numero).padStart(4, '0') + ' guardado'); return true;
+    } catch (e) {
+      toast(e && e.code === 'quota_exceeded' ? 'La base está llena: borrá presupuestos viejos' : 'No se pudo guardar (' + (e && e.code || 'error') + ')'); return false;
+    }
+  }
+  function empezarNuevo() {
+    S = { cliente: { nombre: '', dir: '', fecha: new Date().toISOString().slice(0, 10) }, items: [], params: S.params, sel: null, nextId: 1, estado: 'borrador' };
+    guardadoComo = null; $('confirm-nuevo').hidden = true; initCliente(); salirEdicion(); render(); window.scrollTo({ top: 0 }); toast('Presupuesto nuevo');
+  }
+  function abrirPresupuesto(p, copia) {
+    const items = JSON.parse(JSON.stringify(p.items || [])).map(M.migrar);
+    S = { cliente: Object.assign({}, p.cliente), items, params: Object.assign({}, p.params), sel: items[0] && items[0].id, nextId: items.reduce((m, i) => Math.max(m, i.id || 0), 0) + 1,
+      estado: copia ? 'borrador' : p.estado || 'borrador', numero: copia ? null : p.numero, docId: copia ? null : p.id, creado: copia ? null : p.creado };
+    if (copia) S.cliente.fecha = new Date().toISOString().slice(0, 10);
+    guardadoComo = copia ? null : contenido(); S.guardadoComo = guardadoComo;
+    initCliente(); salirEdicion(); render(); window.scrollTo({ top: 0 });
+    toast(copia ? 'Copia lista: guardala para darle número' : 'Abierto el N° ' + String(p.numero).padStart(4, '0'));
+  }
+  let borrando = null;
+  function renderLista() {
+    const q = ($('l-buscar').value || '').toLowerCase().trim(), est = $('l-estado').value;
+    const L = Archivo.lista.slice().sort((a, b) => (b.numero || 0) - (a.numero || 0))
+      .filter(p => (!est || (p.estado || 'borrador') === est) && (!q || [p.cliente && p.cliente.nombre, p.cliente && p.cliente.dir, String(p.numero)].join(' ').toLowerCase().includes(q)));
+    $('l-info').textContent = `${Archivo.lista.length} guardado${Archivo.lista.length === 1 ? '' : 's'}` + (Archivo.modo === 'db' ? ' · compartidos con quien tenga acceso al cotizador' : ' · en este navegador');
+    $('l-tab').innerHTML = L.length ? L.map(p => {
+      const f = p.cliente && p.cliente.fecha ? p.cliente.fecha.split('-').reverse().join('/') : '';
+      const actual = p.id === S.docId;
+      return `<tr class="${actual ? 'sel' : ''}"><td class="mono">${String(p.numero || '').padStart(4, '0')}</td><td>${esc(p.cliente && p.cliente.nombre || '—')}<div class="desc">${esc(p.cliente && p.cliente.dir || '')}</div></td><td class="mono">${f}</td>
+        <td class="num">${p.resumen ? p.resumen.unidades : ''}</td><td class="num">${p.resumen ? fmt(p.resumen.totalPagar) : ''}</td><td><span class="chip ${p.estado === 'perdido' ? 'warn' : ''}">${ESTADOS[p.estado || 'borrador']}</span></td>
+        <td style="white-space:nowrap">${borrando === p.id ? `<span class="muted">¿Borrar?</span> <button class="link del" data-lborrar-si="${p.id}">Sí</button><button class="link" data-lborrar-no="1">No</button>` :
+          `<button class="link" data-labrir="${p.id}">Abrir</button><button class="link" data-lcopiar="${p.id}">Duplicar</button><button class="link" data-lpdf="${p.id}">PDF</button>${Archivo.puedeEscribir ? `<button class="link del" data-lborrar="${p.id}">Borrar</button>` : ''}`}</td></tr>`;
+    }).join('') : `<tr><td colspan="7" class="muted">${Archivo.lista.length ? 'Ningún presupuesto coincide con la búsqueda.' : 'Todavía no hay presupuestos guardados. Cargá uno y tocá "Guardar".'}</td></tr>`;
+  }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // ----- PDF -----
+  function pngDeSvg(svg, ancho) {
+    return new Promise((res, rej) => {
+      const img = new Image();
+      img.onload = () => { const c = document.createElement('canvas'); c.width = ancho; c.height = Math.round(ancho * 270 / 300); const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', 0.88)) };
+      img.onerror = rej;
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 270" width="300" height="270">${svg}</svg>`);
+    });
+  }
+  async function generarPDF(pres, interno) {
+    if (!window.jspdf) { toast('No se pudo cargar el generador de PDF (necesita internet la primera vez)'); return }
+    const { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+    const PP = Object.assign({}, M.PARAMETROS_BASE, pres.params), T = M.totales(pres.items, PP);
+    const W = 210, mL = 16, mR = 16, ancho = W - mL - mR; let y = 16;
+    const txt = s => String(s).replace(/−/g, '-').replace(/[–—]/g, '-');
+    const salto = h => { if (y + h > 282) { doc.addPage(); y = 16 } };
+    const verde = [14, 106, 100], gris = [93, 107, 103], negro = [27, 36, 34];
+    const num = pres.numero ? String(pres.numero).padStart(4, '0') : 'borrador';
+    const fecha = pres.cliente && pres.cliente.fecha ? pres.cliente.fecha.split('-').reverse().join('/') : '';
+    // encabezado
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...negro); doc.text('GH Aberturas S.R.L.', mL, y + 2);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...gris);
+    doc.text('Aberturas de PVC · Av. Brig. Gral. Juan Manuel de Rosas 29', mL, y + 7); doc.text('11 6980 6906 · gherrou@aberturasgh.com.ar', mL, y + 11);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...verde);
+    doc.text(interno ? 'PRESUPUESTO · USO INTERNO' : 'PRESUPUESTO', W - mR, y + 1, { align: 'right' });
+    doc.setFontSize(10); doc.setTextColor(...negro); doc.text('N° ' + num + (fecha ? '   ·   ' + fecha : ''), W - mR, y + 7, { align: 'right' });
+    y += 15; doc.setDrawColor(...negro); doc.setLineWidth(0.6); doc.line(mL, y, W - mR, y); y += 7;
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(...gris); doc.text('Sres.', mL, y); doc.text('Dirección / obra', mL + 95, y);
+    doc.setTextColor(...negro); doc.setFont('helvetica', 'bold'); doc.text(txt(pres.cliente && pres.cliente.nombre || '-'), mL, y + 5); doc.text(txt(pres.cliente && pres.cliente.dir || '-'), mL + 95, y + 5);
+    y += 13;
+    // aberturas
+    for (const it of pres.items) {
+      const p = M.precio(it, PP), fr = 1 - (it.descuento || 0) / 100, u = p.unitario * fr;
+      const desc = doc.setFont('helvetica', 'normal').setFontSize(9).splitTextToSize(txt(M.descripcion(it)), ancho - 52);
+      const alto = Math.max(46, 14 + desc.length * 4 + 22);
+      salto(alto + 4);
+      doc.setDrawColor(213, 220, 217); doc.setLineWidth(0.3); doc.rect(mL, y, ancho, alto);
+      try { const png = await pngDeSvg(svgPlano(it, PAL_PDF), 520); doc.addImage(png, 'JPEG', mL + 2, y + 3, 44, 39.6) } catch {}
+      const x = mL + 50; let yy = y + 6;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...negro);
+      doc.text(txt(`${it.cod || ''}   ${it.cantidad} u.   ${it.ancho} × ${it.alto} mm`), x, yy);
+      if (it.iva === 'sin') { doc.setFontSize(8); doc.setTextColor(...verde); doc.text('SIN IVA', W - mR - 3, yy, { align: 'right' }) }
+      yy += 5; doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...gris); doc.text(desc, x, yy); yy += desc.length * 4 + 2;
+      const filas = [['Carpintería', p.carpinteria], ['Vidrios', p.vidrios]]; if (p.montaje) filas.push(['Montaje', p.montaje]); if (p.mosq) filas.push(['Mosquitero', p.mosq]);
+      doc.setFontSize(8.5);
+      filas.forEach(([n, v], i) => { const cx = x + (i % 2) * 62, cy = yy + Math.floor(i / 2) * 4.2; doc.setTextColor(...gris); doc.text(n, cx, cy); doc.setTextColor(...negro); doc.text('USD ' + fmt(v * fr), cx + 55, cy, { align: 'right' }) });
+      yy += Math.ceil(filas.length / 2) * 4.2 + 2;
+      doc.setFontSize(9.5); doc.setTextColor(...negro);
+      const pie = `USD x U ${fmt(u)}` + (it.descuento ? `  (−${it.descuento}% s/ ${fmt(p.unitario)})` : '');
+      doc.text(txt(pie), x, Math.max(yy + 2, y + alto - 5)); doc.setFont('helvetica', 'bold'); doc.text('Total USD ' + fmt(u * it.cantidad), W - mR - 3, Math.max(yy + 2, y + alto - 5), { align: 'right' });
+      y += alto + 4;
+      if (interno) {
+        const h = M.hetmo(it, PP), mg = 1 + PP.margen / 100;
+        const N = { perfiles: 'Perfiles', refuerzos: 'Refuerzos', juntas: 'Juntas', tornilleria: 'Tornillería', accesorios: 'Accesorios', vidrios: 'Vidrios', tapajuntas: 'Tapajuntas', herraje: 'Herraje', fabricacion: 'Fabricación', acristalamiento: 'Acristalamiento' };
+        salto(8 + 4.2 * 13); doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...verde);
+        doc.text(txt(`Análisis de importes ${it.cod || ''} (por unidad)${M.esExacto(it) ? '' : ' · aproximado'}`), mL, y); y += 4;
+        doc.setTextColor(...gris); ['Partida', 'Compra', 'Venta 1', 'Venta'].forEach((c, i) => doc.text(c, i ? mL + 40 + i * 25 : mL, y, i ? { align: 'right' } : undefined)); y += 3.6;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(...negro);
+        const fila = (n, a, b, c, bold) => { doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.text(txt(n), mL, y); [a, b, c].forEach((v, i) => doc.text(v == null ? '' : fmt(v), mL + 65 + i * 25, y, { align: 'right' })); y += 3.6 };
+        Object.keys(N).forEach(k => { if (h.compra[k] > 0.0005) fila(N[k], h.compra[k], h.venta1Grupos[k], h.venta1Grupos[k] * mg) });
+        fila('Montaje', 0, h.montaje, h.montaje * mg); fila('Total', h.totalCompra, h.venta1, h.venta, true); y += 2;
+        // despiece compacto
+        const filasD = h.detalle; salto(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...verde); doc.text('Despiece', mL, y); y += 3.6; doc.setFontSize(7);
+        for (const d of filasD) {
+          salto(3.4); doc.setFont('helvetica', 'normal'); doc.setTextColor(...negro);
+          const cant = d.unidad === 'm²' ? d.cant.toFixed(3) + ' m²' : d.unidad === 'm' && !d.largo ? d.cant.toFixed(3) + ' m' : String(d.uds);
+          doc.text(txt(d.seccion || ''), mL, y); doc.text(txt(d.cod), mL + 9, y); doc.text(txt(d.desc).slice(0, 44), mL + 36, y); doc.text(cant, mL + 112, y, { align: 'right' });
+          doc.text(d.largo ? String(d.largo) : '', mL + 126, y, { align: 'right' }); doc.text(d.precio.toFixed(3), mL + 148, y, { align: 'right' }); doc.text(d.importe.toFixed(3), W - mR, y, { align: 'right' }); y += 3.2;
+        }
+        y += 4;
+      }
+    }
+    // totales
+    const G = T.grupos, filasT = [];
+    const bloque = (titulo, g, conIva) => {
+      filasT.push([titulo, null, 'tit']); filasT.push(['Precio de lista', g.lista]);
+      if (g.dtoRenglon > 0.005) filasT.push(['Descuento por abertura', -g.dtoRenglon]);
+      if (g.dtoRubros > 0.005) filasT.push(['Descuento por rubro', -g.dtoRubros]);
+      if (g.dtoGeneral > 0.005) filasT.push(['Descuento general', -g.dtoGeneral]);
+      if (conIva) { filasT.push(['Neto', g.total, 'b']); filasT.push([`IVA ${PP.iva}%`, g.iva]); filasT.push(['Total con IVA', g.totalFinal, 'b']) }
+      else filasT.push(['Total sin IVA', g.total, 'b']);
+    };
+    if (T.hayCon) bloque(T.haySin ? 'CON IVA' : 'TOTALES', G.con, true);
+    if (T.haySin) bloque('SIN IVA', G.sin, false);
+    salto(filasT.length * 5 + 40);
+    const xT = W - mR - 80; doc.setDrawColor(...negro); doc.setLineWidth(0.4); doc.line(xT, y, W - mR, y); y += 5;
+    for (const [n, v, k] of filasT) {
+      doc.setFontSize(k === 'tit' ? 8 : 9.5); doc.setFont('helvetica', k ? 'bold' : 'normal'); doc.setTextColor(...(k === 'tit' ? verde : negro));
+      doc.text(txt(n), xT, y); if (v != null) doc.text((v < 0 ? '- ' : '') + 'USD ' + fmt(Math.abs(v)), W - mR, y, { align: 'right' }); y += k === 'tit' ? 4.5 : 5;
+    }
+    y += 1; doc.setLineWidth(0.6); doc.line(xT, y, W - mR, y); y += 6;
+    doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(...negro); doc.text('A PAGAR', xT, y); doc.text('USD ' + fmt(T.totalPagar), W - mR, y, { align: 'right' }); y += 6;
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(...gris);
+    const rub = [['Carpintería', T.carpinteria], ['Vidrios', T.vidrios], ['Montaje', T.montaje], ['Mosquiteros', T.mosq]].filter(r => r[1] > 0.005).map(([n, v]) => `${n} USD ${fmt(v)}`).join('   ·   ');
+    doc.text(txt(rub), W - mR, y, { align: 'right' }); y += 5;
+    if (interno) { doc.setTextColor(...verde); doc.text(txt(`Costo de compra USD ${fmt(T.compra)}   ·   Margen sobre costo USD ${fmt(T.total - T.compra)}   ·   Dólar vidrios $${PP.tipoCambio}`), W - mR, y, { align: 'right' }); y += 5 }
+    // condiciones
+    salto(26); y += 4; doc.setFontSize(8.5); doc.setTextColor(...gris);
+    const cond = doc.splitTextToSize('Forma de pago: 60% de adelanto y 40% contra entrega y colocación. Plazo de entrega: color blanco 60/80 días, colores 80/110 días. Precio en dólares tipo vendedor del Banco Nación del día de pago. En caso de ser necesario, el izaje se cotiza aparte.', ancho);
+    doc.text(cond, mL, y);
+    const pags = doc.getNumberOfPages();
+    for (let i = 1; i <= pags; i++) { doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(...gris); doc.text(`GH Aberturas · Presupuesto N° ${num} · página ${i} de ${pags}`, W / 2, 291, { align: 'center' }) }
+    const nombre = `Presupuesto ${num} ${(pres.cliente && pres.cliente.nombre || '').replace(/[^\wÁÉÍÓÚáéíóúÑñ .-]/g, '').trim()}${interno ? ' (interno)' : ''}.pdf`.replace(/\s+/g, ' ');
+    const blob = doc.output('blob');
+    const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+    if (dl) {
+      try { await dl.save({ filename: nombre, data: blob }); toast('PDF descargado') }
+      catch (e) { if (e && e.code !== 'declined') toast('No se pudo descargar el PDF (' + (e.code || 'error') + ')') }
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 2000);
+    }
+  }
+  const presActual = () => ({ numero: S.numero, cliente: S.cliente, items: S.items, params: S.params });
+
   // ----- eventos -----
   ['f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-dto', 'f-iva'].forEach(id => $(id).addEventListener('input', () => { if (id === 'f-ancho' || id === 'f-alto') renderSecs(); preview() }));
   $('f-item').addEventListener('submit', e => {
@@ -518,14 +766,38 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   $('t-montaje').addEventListener('change', e => { S.params.incluirMontaje = e.target.checked ? 1 : 0; render(); preview() });
   document.querySelectorAll('input.dto').forEach(i => i.addEventListener('input', e => { S.params[e.target.dataset.k] = Math.max(0, +e.target.value || 0); render() }));
   $('d-aplica').addEventListener('change', e => { S.params.dtoAplica = e.target.value; render() });
-  ['nombre', 'dir', 'fecha'].forEach(k => $('c-' + k).addEventListener('input', e => { S.cliente[k] = e.target.value; save() }));
+  ['nombre', 'dir', 'fecha'].forEach(k => $('c-' + k).addEventListener('input', e => { S.cliente[k] = e.target.value; save(); marcarCambios() }));
   $('b-copiar').addEventListener('click', () => { navigator.clipboard.writeText(documento()).then(() => toast('Presupuesto copiado'), () => toast('No se pudo copiar en este navegador')) });
-  $('b-nuevo').addEventListener('click', () => { $('confirm-nuevo').hidden = false });
-  $('b-no').addEventListener('click', () => { $('confirm-nuevo').hidden = true });
-  $('b-si').addEventListener('click', () => { S = { cliente: { nombre: '', dir: '', fecha: new Date().toISOString().slice(0, 10) }, items: [], params: S.params, sel: null, nextId: 1 }; $('confirm-nuevo').hidden = true; initCliente(); salirEdicion(); render() });
   $('h-item').addEventListener('change', renderHetmo);
   $('params').addEventListener('input', e => { const k = e.target.dataset.k; if (!k) return; const v = parseFloat(e.target.value); if (isNaN(v)) return; S.params[k] = v; render(); preview(); validar() });
   $('b-reset').addEventListener('click', () => { S.params = { tipoCambio: S.params.tipoCambio }; renderParams(); render(); preview(); validar(); toast('Parámetros restablecidos') });
+
+  let pendiente = null;
+  function conCuidado(fn) { if (marcarCambios()) { pendiente = fn; $('confirm-nuevo').hidden = false; $('confirm-nuevo').scrollIntoView({ block: 'center' }) } else fn() }
+  $('b-nuevo').addEventListener('click', () => conCuidado(empezarNuevo));
+  $('b-nuevo-guardar').addEventListener('click', async () => { if (await guardarPresupuesto()) { $('confirm-nuevo').hidden = true; const f = pendiente; pendiente = null; f && f() } });
+  $('b-nuevo-descartar').addEventListener('click', () => { $('confirm-nuevo').hidden = true; const f = pendiente; pendiente = null; f && f() });
+  $('b-nuevo-cancelar').addEventListener('click', () => { $('confirm-nuevo').hidden = true; pendiente = null });
+  $('b-guardar-pres').addEventListener('click', guardarPresupuesto);
+  $('b-pdf').addEventListener('click', () => S.items.length ? generarPDF(presActual(), false) : toast('El presupuesto está vacío'));
+  $('b-pdf-int').addEventListener('click', () => S.items.length ? generarPDF(presActual(), true) : toast('El presupuesto está vacío'));
+  $('pres-estado').addEventListener('change', e => { S.estado = e.target.value; save(); marcarCambios() });
+  $('l-buscar').addEventListener('input', renderLista); $('l-estado').addEventListener('change', renderLista);
+  $('l-tab').addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b) return; const ds = b.dataset;
+    const find = id => Archivo.lista.find(x => x.id === id);
+    if (ds.labrir) conCuidado(() => abrirPresupuesto(find(ds.labrir), false));
+    if (ds.lcopiar) conCuidado(() => abrirPresupuesto(find(ds.lcopiar), true));
+    if (ds.lpdf) generarPDF(find(ds.lpdf), false);
+    if (ds.lborrar) { borrando = ds.lborrar; renderLista() }
+    if (ds.lborrarNo) { borrando = null; renderLista() }
+    if (ds.lborrarSi) {
+      borrando = null;
+      try { await Archivo.borrar(ds.lborrarSi); if (S.docId === ds.lborrarSi) { S.docId = null; S.numero = null; guardadoComo = null; save(); marcarCambios() } toast('Presupuesto borrado') }
+      catch (err) { toast('No se pudo borrar (' + (err && err.code || 'error') + ')') }
+      renderLista();
+    }
+  });
 
   let tt; function toast(m) { const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 1800) }
   function initCliente() { $('c-nombre').value = S.cliente.nombre || ''; $('c-dir').value = S.cliente.dir || ''; $('c-fecha').value = S.cliente.fecha || '' }
@@ -534,6 +806,6 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   const first = S.items.find(i => i.id === S.sel);
   if (first) cargarForm(Object.assign({}, first)); else renderSecs();
   $('f-cod').value = sugerirCodigo();
-  preview(); render(); validar();
+  preview(); render(); validar(); marcarCambios(); Archivo.init();
 })();
 </script>
