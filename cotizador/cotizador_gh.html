@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>[hidden]{display:none!important}</style>
+<title>Cotizador GH Aberturas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: banco de trabajo — formulario + plano a la izquierda, presupuesto vivo a la derecha; abajo, paneles técnicos. */
+:root {
+  --bg: #f3f5f4; --panel: #ffffff; --ink: #1b2422; --muted: #5d6b67; --line: #d5dcd9;
+  --accent: #0e6a64; --accent-ink: #ffffff; --accent-soft: #dcefec; --wood: #a8712f;
+  --warn: #9a5b00; --bad: #b3261e; --good: #1f7a3a;
+  --f-display: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121816; --panel: #1a2220; --ink: #e6ecea; --muted: #9aa8a4; --line: #2e3a37;
+  --accent: #4fb8ae; --accent-ink: #0b1513; --accent-soft: #1d3532; --wood: #d39a55;
+  --warn: #e3a64a; --bad: #ff8a80; --good: #6fcf8a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121816; --panel: #1a2220; --ink: #e6ecea; --muted: #9aa8a4; --line: #2e3a37;
+  --accent: #4fb8ae; --accent-ink: #0b1513; --accent-soft: #1d3532; --wood: #d39a55;
+  --warn: #e3a64a; --bad: #ff8a80; --good: #6fcf8a; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px }
+.wrap { max-width: 1240px; margin: 0 auto }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: .01em }
+h1 { font-size: 1.7rem; font-weight: 700 }
+h2 { font-size: 1.15rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em }
+.num, .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.muted { color: var(--muted) }
+small { font-size: .82rem }
+
+header.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; padding-block: 20px 16px; border-bottom: 2px solid var(--ink); margin-bottom: 18px }
+header.top .marca { display: flex; flex-direction: column; gap: 2px }
+header.top .lema { font-family: var(--f-display); color: var(--muted); letter-spacing: .14em; text-transform: uppercase; font-size: .78rem }
+.cliente { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; flex: 1 1 520px; max-width: 720px }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 18px; align-items: start }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr) } .cliente { grid-template-columns: minmax(0, 1fr) } }
+
+section.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.cardhead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap }
+
+label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; min-width: 0 }
+input, select, textarea { font: inherit; font-size: .95rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; width: 100%; min-width: 0; text-transform: none; letter-spacing: 0 }
+input[type=number] { font-family: var(--f-mono) }
+input:focus-visible, select:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+.check { flex-direction: row; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: .95rem; color: var(--ink) }
+.check input { width: auto }
+
+.form { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px }
+.form .span2 { grid-column: span 2 } .form .span4 { grid-column: 1 / -1 }
+@media (max-width: 520px) { .form { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+
+button { font: 600 .92rem var(--f-body); border-radius: 4px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink) }
+button.prim { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+button.link { background: none; border: 0; padding: 4px 6px; color: var(--accent); font-weight: 500 }
+button.link.del { color: var(--bad) }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+
+.plano { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: center }
+@media (max-width: 520px) { .plano { grid-template-columns: minmax(0, 1fr) } }
+.plano svg { width: 100%; height: auto; max-height: 260px }
+.desg { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: .92rem }
+.desg .num { text-align: right }
+.desg .tot { font-weight: 600; border-top: 1px solid var(--line); padding-top: 4px }
+.chip { display: inline-block; font: 500 .72rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent) }
+.chip.warn { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn) }
+
+.tabla { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: .9rem }
+th { font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap }
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top }
+td.num, th.num { text-align: right; white-space: nowrap }
+tr.sel td { background: var(--accent-soft) }
+.desc { font-size: .84rem; color: var(--muted) }
+tr.sin-borde td { border-bottom: 0 }
+fieldset.dtos { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px 12px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0 }
+fieldset.dtos legend { font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 4px }
+.grupo { grid-column: 1 / -1; font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-top: 6px }
+
+.totales { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-size: .95rem }
+.totales .num { text-align: right }
+.totales .big { font-family: var(--f-display); font-size: 1.5rem; font-weight: 700 }
+.totales .sep { grid-column: 1 / -1; border-top: 1px solid var(--line); margin: 4px 0 }
+.minis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+
+pre.doc { font: .82rem/1.5 var(--f-mono); background: var(--bg); border: 1px dashed var(--line); padding: 12px; white-space: pre-wrap; margin: 0; max-height: 420px; overflow: auto }
+
+details.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); margin-top: 18px }
+details.card > summary { cursor: pointer; padding: 14px 16px; font-family: var(--f-display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; list-style: none; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap }
+details.card > summary::after { content: "+"; font-family: var(--f-mono) }
+details.card[open] > summary::after { content: "−" }
+details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px }
+.params { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px }
+.e-ok { color: var(--good) } .e-mid { color: var(--warn) } .e-bad { color: var(--bad) }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 4px; font-size: .9rem }
+@media (prefers-reduced-motion: no-preference) { tr { transition: background .15s } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="marca">
+      <span class="lema">Aberturas GH · PVC Muchtek · cálculo Hetmo</span>
+      <h1>Cotizador GH Aberturas</h1>
+    </div>
+    <div class="cliente">
+      <label>Cliente<input id="c-nombre" placeholder="Sres. …"></label>
+      <label>Dirección / obra<input id="c-dir" placeholder="Dirección"></label>
+      <label>Fecha<input id="c-fecha" type="date"></label>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="h-nueva">
+      <div class="cardhead"><h2 id="h-nueva">Abertura</h2><span class="chip" id="modo-chip">Nueva</span></div>
+      <form class="form" id="f-item" autocomplete="off">
+        <label class="span2">Tipología<select id="f-tip"></select></label>
+        <label>Modelo<input id="f-cod" placeholder="V1"></label>
+        <label>Uds.<input id="f-cant" type="number" min="1" step="1" value="1"></label>
+        <label>Ancho (mm)<input id="f-ancho" type="number" min="300" step="5" value="1500"></label>
+        <label>Alto (mm)<input id="f-alto" type="number" min="300" step="5" value="1100"></label>
+        <label class="span2">Color<select id="f-color"></select></label>
+        <label class="span2">Vidrio<select id="f-vidrio"></select></label>
+        <label>Dto. renglón %<input id="f-dto" type="number" min="0" max="100" step="0.5" value="0"></label>
+        <label>Factura<select id="f-iva"><option value="con">Con IVA</option><option value="sin">Sin IVA</option></select></label>
+        <label class="check span2" id="l-mosq"><input type="checkbox" id="f-mosq"> Con mosquitero</label>
+        <div class="row span4">
+          <button type="submit" class="prim" id="b-guardar">Agregar al presupuesto</button>
+          <button type="button" id="b-cancelar" hidden>Cancelar edición</button>
+        </div>
+      </form>
+      <div class="plano">
+        <svg id="dibujo" viewBox="0 0 300 260" role="img" aria-label="Plano de la abertura"></svg>
+        <div>
+          <div class="row" style="justify-content:space-between"><strong>Precio por unidad</strong><span id="p-chip"></span></div>
+          <div class="desg" id="p-desg"></div>
+          <p class="muted" style="margin:.6em 0 0" id="p-nota"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-pres">
+      <div class="cardhead"><h2 id="h-pres">Presupuesto</h2><span class="muted" id="pres-cant"></span></div>
+      <div class="tabla"><table>
+        <thead><tr><th>Modelo</th><th class="num">Uds.</th><th>Medida</th><th class="num">USD x U</th><th class="num">Total</th><th></th></tr></thead>
+        <tbody id="t-items"></tbody>
+      </table></div>
+      <div class="minis">
+        <label>Dólar vidrios ($)<input id="t-tc" type="number" min="1" step="5"></label>
+        <label class="check" style="align-self:end"><input type="checkbox" id="t-montaje"> Incluir montaje</label>
+      </div>
+      <fieldset class="dtos">
+        <legend>Descuentos</legend>
+        <div class="minis">
+          <label>Carpintería %<input class="dto" data-k="dtoCarp" id="d-carp" type="number" min="0" max="100" step="0.5"></label>
+          <label>Vidrios %<input class="dto" data-k="dtoVid" id="d-vid" type="number" min="0" max="100" step="0.5"></label>
+          <label>Montaje %<input class="dto" data-k="dtoMont" id="d-mont" type="number" min="0" max="100" step="0.5"></label>
+          <label>Mosquiteros %<input class="dto" data-k="dtoMosq" id="d-mosq" type="number" min="0" max="100" step="0.5"></label>
+          <label>General %<input class="dto" data-k="descuento" id="d-gen" type="number" min="0" max="100" step="0.5"></label>
+          <label>Monto fijo USD<input class="dto" data-k="dtoFijo" id="d-fijo" type="number" min="0" step="10"></label>
+        </div>
+        <label>El general y el monto fijo se aplican a<select id="d-aplica">
+          <option value="todo">Todo el presupuesto</option>
+          <option value="sin">Solo lo que va sin IVA</option>
+          <option value="con">Solo lo que va con IVA</option>
+        </select></label>
+        <p class="muted" style="margin:0"><small>Cada abertura tiene además su propio descuento y se marca con IVA o sin IVA desde el formulario.</small></p>
+      </fieldset>
+      <div class="totales" id="t-tot"></div>
+      <div class="row">
+        <button type="button" class="prim" id="b-copiar">Copiar presupuesto</button>
+        <button type="button" id="b-nuevo">Presupuesto nuevo</button>
+        <span id="confirm-nuevo" hidden class="row"><span class="muted">¿Borrar todo?</span><button type="button" id="b-si">Sí, borrar</button><button type="button" id="b-no">No</button></span>
+      </div>
+    </section>
+  </div>
+
+  <details class="card" id="d-hetmo" open>
+    <summary>Análisis de importes y despiece <span id="h-chip"></span></summary>
+    <div class="in">
+      <div class="row"><label style="flex:1 1 260px">Abertura<select id="h-item"></select></label></div>
+      <div class="tabla"><table>
+        <thead><tr><th>Partida</th><th class="num">Compra</th><th class="num">Venta 1</th><th class="num">%</th><th class="num">Venta</th></tr></thead>
+        <tbody id="h-res"></tbody>
+      </table></div>
+      <div class="tabla"><table>
+        <thead><tr><th>Código</th><th>Artículo</th><th class="num">Uds.</th><th class="num">Corte</th><th>Detalle</th><th class="num">Unitario</th><th class="num">T-Comp</th></tr></thead>
+        <tbody id="h-det"></tbody>
+      </table></div>
+    </div>
+  </details>
+
+  <details class="card" id="d-params">
+    <summary>Parámetros de cálculo</summary>
+    <div class="in">
+      <div class="params" id="params"></div>
+      <div class="row"><button type="button" id="b-reset">Volver a los valores de fábrica</button></div>
+    </div>
+  </details>
+
+  <details class="card" id="d-valid">
+    <summary>Control contra Hetmo <span class="muted" id="v-res" style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400"></span></summary>
+    <div class="in">
+      <p class="muted" style="margin:0">Las 4 ventanas que se cargaron en Hetmo con el dólar a $1540. El cotizador las recalcula con ese mismo dólar.</p>
+      <div class="tabla"><table>
+        <thead><tr><th>Ventana</th><th class="num">Compra Hetmo</th><th class="num">Cotizador</th><th class="num">Venta Hetmo</th><th class="num">Cotizador</th><th class="num">Dif.</th></tr></thead>
+        <tbody id="v-tab"></tbody>
+      </table></div>
+    </div>
+  </details>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+// Motor de cálculo del cotizador GH.
+//  - hetmo(): reproduce el "Análisis de importes" de Hetmo a partir del despiece de cada ficha técnica.
+//    Exacto (al centavo) para Prime 74 2 guías, DC 66-85 1 hoja y paño fijo DC, verificado contra
+//    capturas de Hetmo. El resto de las tipologías se arma por analogía y se marca como aproximado.
+//  - precioWMaker(): precio de lista calibrado con presupuestos reales de WMaker (referencia).
+(function (root) {
+  'use strict';
+
+  const TIPOLOGIAS = {
+    corr2:  { nombre: 'Corrediza Prime 74, 2 hojas',  prefijo: 'V',  hojas: 2, desc: 'Ventana corrediza linea Prime 74', ficha: '175 LINEA PRIME 74 - 2 GUIAS', exacto: true, mosq: true },
+    abrir1: { nombre: 'De abrir DC 66-85, 1 hoja',    prefijo: 'V',  hojas: 1, desc: 'Ventana de abrir linea DC 66-85', ficha: '108 DC 66-85', exacto: true, mosq: true },
+    pano:   { nombre: 'Paño fijo DC',                 prefijo: 'V',  hojas: 0, desc: 'Paño fijo linea DC 58-66', ficha: 'Paño fijo DC 58-66', exacto: true },
+    corr3:  { nombre: 'Corrediza Prime 74, 3 hojas',  prefijo: 'V',  hojas: 3, desc: 'Ventana corrediza linea Prime 74', ficha: '176 LINEA PRIME 74 - 3 GUIAS', mosq: true },
+    abrir2: { nombre: 'De abrir DC 66-85, 2 hojas',   prefijo: 'V',  hojas: 2, desc: 'Ventana de abrir linea DC 66-85', ficha: '108 DC 66-85', mosq: true },
+    osc1:   { nombre: 'Oscilobatiente DC, 1 hoja',    prefijo: 'V',  hojas: 1, desc: 'Ventana oscilobatiente linea DC 66-85', ficha: '108 DC 66-85', mosq: true },
+    osc2:   { nombre: 'Oscilobatiente DC, 2 hojas',   prefijo: 'V',  hojas: 2, desc: 'Ventana oscilobatiente linea DC 66-85', ficha: '108 DC 66-85', mosq: true },
+    proy:   { nombre: 'Proyectante DC',               prefijo: 'V',  hojas: 1, desc: 'Ventana proyectante linea DC 66-85', ficha: 'DC 66-85', mosq: true },
+    puerta1:{ nombre: 'Puerta DC 100, 1 hoja',        prefijo: 'P',  hojas: 1, desc: 'Puerta de rebatir linea DC 100', ficha: '109 DC 66-100' },
+    puerta2:{ nombre: 'Puerta DC 100, 2 hojas',       prefijo: 'P',  hojas: 2, desc: 'Puerta de rebatir linea DC 100', ficha: '109 DC 66-100' },
+  };
+
+  const COLORES = {
+    blanco:      { nombre: 'Blanco' },
+    golden:      { nombre: 'Golden Oak' },
+    nogal:       { nombre: 'Nogal' },
+    grafito:     { nombre: 'Gris Grafito' },
+    negro:       { nombre: 'Negro (Jet Black)' },
+    turner:      { nombre: 'Turner Oak' },
+    bic_golden:  { nombre: 'Blanco int. / Golden Oak ext.' },
+    bic_grafito: { nombre: 'Blanco int. / Gris Grafito ext.' },
+    bic_negro:   { nombre: 'Blanco int. / Negro ext.' },
+  };
+
+  // Vidrios: precio en pesos por m² de la lista de almacén (corregido ×1,001 como lo toma Hetmo)
+  // y separador de cámara en pesos por metro.
+  const VIDRIOS = {
+    dvh:        { nombre: 'DVH 4/12/4 incoloro',          cod: '4/12/4 INC',     ars: 34379, camara: 'C12', wmaker: 'doble vidriado hermetico 4/12/4', multWM: 1.00 },
+    dvh_lam:    { nombre: 'DVH laminado 3+3 / 9 / 4',     cod: '3+3/9/4 INC',    ars: 72169, camara: 'C9',  wmaker: 'doble vidriado hermetico lam 3+3 + camara 9 + float 4', multWM: 1.17 },
+    dvh_lamlam: { nombre: 'DVH laminado 3+3 / 9 / 3+3',   cod: '3+3/9/3+3 INC',  ars: 109959, camara: 'C9', wmaker: 'doble vid lam 3+3 + camara 9 + lam 3+3', multWM: 1.28 },
+    dvh_sat:    { nombre: 'DVH 4/12/4 satinado',          cod: '4/12/4 SAT',     ars: 122196, camara: 'C12', wmaker: 'doble vidriado hermetico 4/12/4 satinado', multWM: 1.10 },
+    dvh_temp:   { nombre: 'DVH 4/12/4 templado',          cod: '4/12/4 TEMP',    ars: 74373, camara: 'C12', wmaker: 'doble vidriado hermetico 4/12/4 templado', multWM: 1.20 },
+    lam33:      { nombre: 'Laminado 3+3 incoloro',        cod: '3+3 INC',        ars: 54980, camara: null, wmaker: 'laminado 3+3 incoloro', multWM: 0.55 },
+    float4:     { nombre: 'Float 4 mm incoloro',          cod: '4 INC',          ars: 17190, camara: null, wmaker: 'float 4mm incoloro', multWM: 0.24 },
+    sat4:       { nombre: 'Satinado 4 mm',                cod: '4 SAT',          ars: 61098, camara: null, wmaker: 'satinado 4mm', multWM: 0.60 },
+  };
+  const CAMARAS = { C9: 11996, C12: 13979, C20: 18369 };
+
+  const PARAMETROS_BASE = {
+    tipoCambio: 1540,          // dólar con el que Hetmo pasa vidrios y cámaras a USD
+    margen: 55,                // tarifa general
+    mermaLineal: 1.07,         // Compra → Venta 1 en artículos por metro (perfiles, refuerzos, cámara)
+    montajeMl: 17,             // montaje: USD por metro de perímetro, va en Venta 1
+    incluirMontaje: 1,         // 1 = el precio incluye montaje como en Hetmo
+    recargoHerrajeGU: 1.1466,  // Hetmo valúa GU 14,66% arriba de la lista de almacén
+    descuento: 0, dtoFijo: 0, dtoAplica: 'todo', dtoCarp: 0, dtoVid: 0, dtoMont: 0, dtoMosq: 0, iva: 21,
+  };
+
+  // Precios por metro o por unidad (USD) tomados del despiece de Hetmo; color: tabla de almacén.
+  // [descripción, grupo, precio blanco, {precios por color}, lineal]
+  const ART = {
+    '110331000': ['HOJA PRIME 74', 'perfiles', 4.905, { golden: 8.083, nogal: 7.99, grafito: 8.0, negro: 8.62, turner: 8.66, bic_golden: 7.8, bic_negro: 8.49 }, 1],
+    '112501000': ['MARCO DZ', 'perfiles', 5.774, { golden: 10.882, bic_golden: 7.46, bic_negro: 8.15 }, 1],
+    '112601000': ['MARCO 3 GUIAS DZ', 'perfiles', 11.2, { bic_golden: 11.21, bic_negro: 11.8 }, 1],
+    '113341000': ['TAPA HOJA PRIME', 'perfiles', 0.792, { golden: 1.099 }, 1],
+    '113411000': ['Tapa encuentro DZ', 'perfiles', 0.134, null, 1],
+    '113451000': ['ENCUENTRO PRIME 74', 'perfiles', 0.826, { golden: 1.19, nogal: 1.19, grafito: 1.14, negro: 1.28, turner: 1.31 }, 1],
+    '144410300': ['GUIA PRIME', 'perfiles', 3.492, null, 1],
+    '410061000': ['CONTRAVIDRIO 6,5MM', 'perfiles', 0.783, { golden: 1.063, grafito: 1.06, nogal: 1.06, negro: 1.28, turner: 1.47 }, 1],
+    '112241000': ['MARCO DC 58-66', 'perfiles', 5.461, { golden: 8.47, nogal: 8.47, grafito: 8.5, negro: 8.82, turner: 9.77, bic_golden: 7.98, bic_negro: 8.17 }, 1],
+    '110201000': ['HOJA APERTURA INTERIOR DC 85', 'perfiles', 5.666, { golden: 9.63, nogal: 9.63, grafito: 9.63, negro: 10.83, turner: 12.41, bic_golden: 8.87, bic_negro: 9.06 }, 1],
+    '110211000': ['HOJA PUERTA AP. INT. DC 100', 'perfiles', 6.32, { golden: 11.08, nogal: 11.08, grafito: 11.08, negro: 13.26, turner: 15.19, bic_golden: 9.2, bic_negro: 9.43 }, 1],
+    '111231000': ['BATIENTE DC', 'perfiles', 5.15, { golden: 8.24, nogal: 8.24, grafito: 8.24, negro: 9.82, turner: 11.25, bic_golden: 6.31, bic_negro: 6.72 }, 1],
+    '410181000': ['CONTRAVIDRIO 18,5MM', 'perfiles', 1.231, { golden: 2.1, nogal: 2.1, grafito: 2.1, negro: 2.35, turner: 2.69 }, 1],
+    '913151000': ['TAPA CANAL HERRAJE', 'perfiles', 0.271, null, 1],
+    '913051000': ['PERFIL REMATE INTERIOR 40MM', 'tapajuntas', 0.975, { golden: 2.045 }, 1],
+    '920100015': ['REFUERZO ABIERTO 30X20', 'refuerzos', 1.717, null, 1],
+    '920220015': ['REFUERZO ABIERTO 37x15 mm', 'refuerzos', 1.609, null, 1],
+    '920090015': ['REFUERZO ABIERTO 30X35', 'refuerzos', 2.519, null, 1],
+    '920470013': ['Refuerzo 30,4 x 25,4 mm', 'refuerzos', 2.438, null, 1],
+    '920480013': ['Refuerzo 30,4 x 25,4 mm abierto', 'refuerzos', 1.992, null, 1],
+    '920070025': ['REFUERZO PESADO HOJA DC 100', 'refuerzos', 4.81, null, 1],
+    '932003300': ['COLIZA DZ CON FILM SEAL 5x7', 'juntas', 0.336, null, 0],
+    '145040000': ['Puente de acristalar DZ 46', 'accesorios', 0.53, null, 0],
+    '145101000': ['Cortaviento DZ 46', 'accesorios', 0.836, null, 0],
+    '145231000': ['TOPE AMORTIGUADOR', 'accesorios', 0.567, null, 0],
+    '145060000': ['PUENTE DE ACRISTALAR DC', 'accesorios', 0.205, null, 0],
+    '945131000': ['TAPA DESAGUE', 'accesorios', 0.214, null, 0],
+    '945160000': ['Calzo 4 mm', 'accesorios', 0.205, null, 0],
+    '945675000': ['PIEZA DE CLIPAR PARA TAPAJUNTAS 91305', 'accesorios', 0.241, null, 0],
+    '945685000': ['ESCUADRA PARA TAPAJUNTAS 91305', 'accesorios', 0.344, null, 0],
+    'VR-T-01':   ['Tornillo cabezón 9,1 mm', 'accesorios', 0.1, null, 0],
+    'TR-16':     ['TORNILLO 3.9x16mm', 'tornilleria', 0.3, null, 0],
+    // Herraje GU (precio ya con el recargo que aplica Hetmo)
+    'GU-C-906':  ['MANILLA DIRIGENT-F 33', 'herraje', 5.486, null, 0],
+    'GU-E-138':  ['CERRADERO IN-LINE SIN GUIA', 'herraje', 0.642, null, 0],
+    'GU-E-181':  ['SEGURO ANTIELEVACION IN-LINE', 'herraje', 0.642, null, 0],
+    'GU-L-250':  ['RUEDA FIJA 60 KG 21 MM', 'herraje', 4.349, null, 0],
+    'GU-L-252':  ['Tornillo de manilla M5 x 40 mm', 'herraje', 0.211, null, 0],
+    'GU-6-342':  ['BISAGRA OCULTA UNI-JET PARTE HOJA', 'herraje', 1.835, null, 0],
+    'GU-6-360':  ['SOPORTE COMPAS UNI-JET', 'herraje', 1.183, null, 0],
+    'GU-6-361':  ['BISAGRA AL CANTO UNI-JET', 'herraje', 3.394, null, 0],
+    'GU-6-368':  ['SOPORTE DE ESQUINA UNI-JET', 'herraje', 4.615, null, 0],
+    'GU-6-391':  ['FALSO COMPAS UNI-JET D+S', 'herraje', 6.725, null, 0],
+    'GU-9-408':  ['BISAGRA OCULTA MARCO R13', 'herraje', 1.284, null, 0],
+    'GU-9-447':  ['Cerradero R13', 'herraje', 0.835, null, 0],
+    'GU-9-488':  ['EJE SOPORTE DE COMPAS UNI-JET', 'herraje', 0.376, null, 0],
+    'GU-K-186':  ['KIT 4 TAPAS BIS. AL CANTO UNI-JET', 'herraje', 1.651, null, 0],
+    'GU-OSC':    ['COMPAS OSCILOBATIENTE UNI-JET (aprox.)', 'herraje', 15.5, null, 0],
+    'GU-PROY':   ['COMPASES PROYECTANTE (aprox.)', 'herraje', 21.4, null, 0],
+    'GU-PAS':    ['PASADORES HOJA PASIVA (aprox.)', 'herraje', 9.5, null, 0],
+    'CERR-MP':   ['CERRADURA MULTIPUNTO 25/92', 'herraje', 35.17, null, 0],
+    'BIS-PTA':   ['BISAGRA PUERTA (aprox.)', 'herraje', 8.0, null, 0],
+  };
+  const COLOR_FALLBACK = { blanco: 1, golden: 1.70, nogal: 1.70, grafito: 1.70, negro: 1.82, turner: 1.95, bic_golden: 1.38, bic_grafito: 1.38, bic_negro: 1.45 };
+
+  // Cremonas GU por rango de altura (precio de almacén; se le aplica el recargo GU)
+  const CREMONA_INLINE = [[600, 7.01, 'G-19505 E7,5 200-600'], [1000, 15.97, 'G-15383 E7,5 600-1000'], [1600, 17.29, 'G-15383 E7,5 1000-1600'], [2500, 25.38, 'G-15383 E7,5 1801-2500']];
+  const CREMONA_CANTO = [[600, 5.13, 'E15 310-600'], [800, 5.13, 'E15 601-800'], [900, 5.41, 'E15 801-900'], [1000, 5.13, 'E15 801-1000'], [1100, 6.15, 'E15 1001-1100'], [1200, 5.79, 'E15 1001-1200'], [1300, 7.17, 'E15 1201-1300'], [1400, 6.51, 'E15 1201-1400'], [1500, 8.0, 'E15 1401-1500'], [1600, 7.41, 'E15 1401-1600'], [1800, 8.37, 'E15 1601-1800'], [2000, 9.62, 'E15 1801-2800'], [2200, 11.37, 'E15 2001-2200'], [99999, 11.37, 'E15 2001-2200']];
+  const rango = (tabla, h) => tabla.find(r => h <= r[0]) || tabla[tabla.length - 1];
+
+  const esColor = c => c && c !== 'blanco';
+
+  // ---------- Fichas técnicas ----------
+  // Cada pieza: [código, uds, largo mm (0 si es por unidad), detalle]
+  function ficha(tip, W, H, color) {
+    const L = [], vid = [];
+    const p = (cod, uds, largo, det) => { if (uds > 0) L.push({ cod, uds, largo, det: det || '' }) };
+    const col = esColor(color);
+    // tornillos TR-16 por cada tramo de refuerzo
+    let tr = 0; const trs = (largo, paso) => { tr += Math.ceil(largo / paso) };
+    const remate = () => {
+      p('913051000', 2, W + 70, 'tapajuntas horizontal'); p('913051000', 2, H + 70, 'tapajuntas vertical');
+      const clip = x => Math.max(3, Math.floor(x / 250));
+      p('945675000', 2 * clip(W) + 2 * clip(H), 0); p('945685000', 4, 0);
+      p('VR-T-01', 2 * Math.round((W + 70) / 350) + 2 * Math.round((H + 70) / 350), 0);
+    };
+    if (tip === 'corr2' || tip === 'corr3') {
+      const n = tip === 'corr3' ? 3 : 2;
+      const hw = Math.round(W / n) - 5, hh = H - 90;
+      p('110331000', 2 * n, hw, 'hoja horizontal'); p('110331000', 2 * n, hh, 'hoja vertical');
+      if (n === 2) { p('112501000', 2, W + 6, 'marco'); p('112501000', 2, H + 6, 'marco') }
+      else { p('112601000', 2, W + 6, 'marco 3 guías'); p('112601000', 2, H + 6, 'marco 3 guías') }
+      p('113341000', 2 * (n - 1), H - 98); p('113411000', 2 * (n - 1), H - 98); p('113451000', 2 * (n - 1), H - 98);
+      p('144410300', n === 2 ? 2 : 3, W - 112, 'guía');
+      const gw = Math.round(W / n) - 131, gh = H - 216;
+      for (let i = 0; i < n; i++) { vid.push([gw, gh]); p('410061000', 2, gw + 8); p('410061000', 2, gh + 8) }
+      const pasoH = col ? 170 : 250, pasoM = col ? 200 : 300;
+      p('920100015', 2 * n, hw - 130, 'refuerzo hoja'); p('920100015', 2 * n, hh - 130, 'refuerzo hoja');
+      for (let i = 0; i < 2 * n; i++) { trs(hw - 130, pasoH); trs(hh - 130, pasoH) }
+      p('920220015', 2, W - 88, 'refuerzo marco'); p('920220015', 2, H - 88, 'refuerzo marco');
+      for (let i = 0; i < 2; i++) { trs(W - 88, pasoM); trs(H - 88, pasoM) }
+      p('932003300', 2 * (n - 1), 0, (H - 96) + ' mm'); L[L.length - 1].cantM = (H - 96) / 1000;
+      p('145040000', 4 * n, 0); p('145101000', 2 * (n - 1), 0); p('145231000', 2 * n, 0);
+      p('945131000', 2, 0); p('945160000', 4 * n, 0);
+      remate();
+      const cr = rango(CREMONA_INLINE, hh - 100);
+      p('GU-C-906', n - 1 + (n === 3 ? 0 : 1), 0); p('GU-E-138', 2 * n, 0); p('GU-E-181', n, 0);
+      L.push({ cod: 'CREMONA-IL', uds: n, largo: 0, det: cr[2], precio: cr[1] });
+      p('GU-L-250', 2 * n, 0); p('GU-L-252', 2 * n, 0);
+    } else if (tip === 'pano') {
+      p('112241000', 2, W + 6, 'marco'); p('112241000', 2, H + 6, 'marco');
+      p('145060000', 4, 0);
+      const gw = W - 104, gh = H - 104; vid.push([gw, gh]);
+      p('410181000', 2, gw + 8); p('410181000', 2, gh + 8);
+      p('920470013', 1, W - 116, 'refuerzo marco'); p('920480013', 1, W - 116, 'refuerzo marco'); p('920480013', 2, H - 116, 'refuerzo marco');
+      for (let i = 0; i < 2; i++) { trs(W - 116, 250); trs(H - 116, 250) }
+      p('945131000', 2, 0); p('945160000', 4, 0);
+      remate();
+    } else {
+      // DC 66-85 (abrir / oscilo / proyectante) y DC 100 (puerta)
+      const n = TIPOLOGIAS[tip].hojas, puerta = tip.startsWith('puerta');
+      const hw = n === 1 ? W - 74 : Math.round(W / 2) - 30, hh = H - 74;
+      p('112241000', 2, W + 6, 'marco'); p('112241000', 2, H + 6, 'marco');
+      p(puerta ? '110211000' : '110201000', 2 * n, hw, 'hoja horizontal'); p(puerta ? '110211000' : '110201000', 2 * n, hh, 'hoja vertical');
+      if (n === 2) p('111231000', 1, hh, 'batiente central');
+      p('145060000', 4 * n, 0);
+      const gw = hw - 148, gh = hh - 148 - (puerta ? 100 : 0);
+      for (let i = 0; i < n; i++) { vid.push([gw, gh]); p('410181000', 2, gw + 8); p('410181000', 2, gh + 8) }
+      p('913151000', n, H - 120);
+      p(puerta ? '920070025' : '920090015', 2 * n, hw - 160, 'refuerzo hoja'); p(puerta ? '920070025' : '920090015', 2 * n, hh - 160, 'refuerzo hoja');
+      for (let i = 0; i < 2 * n; i++) { trs(hw - 160, 250); trs(hh - 160, 250) }
+      p('920470013', 1, W - 116, 'refuerzo marco'); p('920480013', 1, W - 116, 'refuerzo marco'); p('920480013', 2, H - 116, 'refuerzo marco');
+      for (let i = 0; i < 2; i++) { trs(W - 116, 250); trs(H - 116, 250) }
+      p('945131000', 2, 0); p('945160000', 4 * n, 0);
+      remate();
+      if (puerta) {
+        p('BIS-PTA', 3 * n, 0); p('CERR-MP', 1, 0); p('GU-C-906', 1, 0); if (n === 2) p('GU-PAS', 1, 0);
+      } else {
+        ['GU-6-342', 'GU-6-360', 'GU-6-361', 'GU-6-368', 'GU-6-391', 'GU-9-408', 'GU-9-488', 'GU-K-186'].forEach(c => p(c, n, 0));
+        p('GU-9-447', 2 * n, 0); p('GU-C-906', 1, 0); p('GU-L-252', 2, 0);
+        const cr = rango(CREMONA_CANTO, hh - 100);
+        L.push({ cod: 'CREMONA-CA', uds: 1, largo: 0, det: cr[2], precio: cr[1] });
+        if (n === 2) p('GU-PAS', 1, 0);
+        if (tip.startsWith('osc')) p('GU-OSC', n, 0);
+        if (tip === 'proy') p('GU-PROY', 1, 0);
+      }
+    }
+    p('TR-16', tr, 0);
+    return { piezas: L, vidrios: vid };
+  }
+
+  // Fabricación (USD de compra): calibrada con las capturas; escala con el perímetro.
+  const FABRICACION = { corr2: [96.238, 5.2], corr3: [96.238 * 1.4, 5.2], pano: [39.13, 4.0], abrir1: [70.946, 3.2], abrir2: [70.946 * 1.7, 3.2], osc1: [70.946 * 1.1, 3.2], osc2: [70.946 * 1.85, 3.2], proy: [70.946, 3.2], puerta1: [70.946 * 1.3, 3.2], puerta2: [70.946 * 2.1, 3.2] };
+  const ACRISTALAMIENTO = 2.9165; // por vidrio
+
+  function hetmo(item, P) {
+    P = Object.assign({}, PARAMETROS_BASE, P || {});
+    const W = item.ancho, H = item.alto, color = item.color || 'blanco';
+    const { piezas, vidrios } = ficha(item.tipologia, W, H, color);
+    const G = { perfiles: 0, refuerzos: 0, juntas: 0, tornilleria: 0, accesorios: 0, tapajuntas: 0, vidrios: 0, herraje: 0, fabricacion: 0, acristalamiento: 0 };
+    const V1 = Object.assign({}, G);
+    const det = [];
+    for (const pz of piezas) {
+      let desc, grupo, precio, lineal;
+      if (pz.precio != null) { desc = 'CREMONA ' + pz.det; grupo = 'herraje'; precio = pz.precio * P.recargoHerrajeGU; lineal = 0 }
+      else {
+        const a = ART[pz.cod]; desc = a[0]; grupo = a[1]; lineal = a[4];
+        precio = a[2];
+        if (esColor(color) && grupo !== 'refuerzos' && a[3] !== null) precio = (a[3] && a[3][color]) || a[2] * COLOR_FALLBACK[color];
+      }
+      const cant = pz.largo ? pz.uds * pz.largo / 1000 : pz.cantM ? pz.uds * pz.cantM : pz.uds;
+      const imp = cant * precio;
+      G[grupo] += imp; V1[grupo] += imp * (lineal ? P.mermaLineal : 1);
+      det.push({ cod: pz.cod, desc, grupo, uds: pz.uds, largo: pz.largo, cant, unidad: pz.largo || pz.cantM ? 'm' : 'u', det: pz.det, precio, importe: imp });
+    }
+    const vid = VIDRIOS[item.vidrio] || VIDRIOS.dvh;
+    const usdM2 = vid.ars / P.tipoCambio;
+    for (const [gw, gh] of vidrios) {
+      const a = Math.max(0.5, Math.ceil(gw / 10) * Math.ceil(gh / 10) / 10000);
+      const imp = a * usdM2; G.vidrios += imp; V1.vidrios += imp;
+      det.push({ cod: vid.cod, desc: vid.nombre, grupo: 'vidrios', uds: 1, cant: a, unidad: 'm²', det: `${gw} × ${gh}`, precio: usdM2, importe: imp });
+      if (vid.camara) {
+        const per = 2 * (gw + gh) / 1000, pc = CAMARAS[vid.camara] / P.tipoCambio, ic = per * pc;
+        G.vidrios += ic; V1.vidrios += ic * P.mermaLineal;
+        det.push({ cod: vid.camara, desc: 'Separador cámara ' + vid.camara, grupo: 'vidrios', uds: 1, cant: per, unidad: 'm', det: 'perímetro del vidrio', precio: pc, importe: ic });
+      }
+    }
+    const per = 2 * (W + H) / 1000;
+    const [fb, pref] = FABRICACION[item.tipologia];
+    G.fabricacion = fb * (0.5 + 0.5 * per / pref) * (esColor(color) ? 1.0173 : 1);
+    G.acristalamiento = ACRISTALAMIENTO * vidrios.length;
+    V1.fabricacion = G.fabricacion; V1.acristalamiento = G.acristalamiento;
+    const montaje = P.montajeMl * per;
+    const compra = Object.values(G).reduce((s, x) => s + x, 0);
+    const venta1 = Object.values(V1).reduce((s, x) => s + x, 0) + montaje;
+    const mg = 1 + P.margen / 100;
+    const carpinteria = (V1.perfiles + V1.refuerzos + V1.juntas + V1.tornilleria + V1.accesorios + V1.tapajuntas + V1.herraje + V1.fabricacion) * mg;
+    const vidriosV = (V1.vidrios + V1.acristalamiento) * mg;
+    const montajeV = montaje * mg;
+    return { detalle: det, compra: G, venta1Grupos: V1, montaje, totalCompra: compra, venta1, venta: venta1 * mg,
+      carpinteria, vidrios: vidriosV, montajeVenta: montajeV, exacto: !!TIPOLOGIAS[item.tipologia].exacto };
+  }
+
+  // ---------- Referencia WMaker (precio de lista GH calibrado) ----------
+  function basicoWM(tip, W, H) {
+    switch (tip) {
+      case 'pano': return 25.6 + 36.9 * W + 89.2 * H;
+      case 'corr2': return 81.1 + 209.1 * W + 188.5 * H;
+      case 'corr3': return (81.1 + 209.1 * W + 188.5 * H) * 1.30;
+      case 'abrir1': return 32.1 + 87.5 * W + 198.5 * H;
+      case 'abrir2': return 111.3 + 107.0 * W + 309.7 * H;
+      case 'osc1': return (32.1 + 87.5 * W + 198.5 * H) * 1.45;
+      case 'osc2': return (111.3 + 107.0 * W + 309.7 * H) * 1.37;
+      case 'proy': return 15.4 + 208.3 * W + 291.0 * H;
+      case 'puerta1': return 868.7 + 13 * (W + H);
+      case 'puerta2': return (868.7 + 13 * (W + H)) * 1.9;
+    }
+    return 0;
+  }
+  function vidrioWM(tip, W, H) {
+    const a = Math.max(0, (W - 0.1) * (H - 0.1)); let v;
+    if (tip === 'pano') v = 154.5 * a;
+    else if (tip.startsWith('corr')) v = 141 * a - 28;
+    else if (tip === 'abrir1' || tip === 'osc1') v = 129.8 * a - 9.5;
+    else if (tip === 'abrir2' || tip === 'osc2') v = 133.5 * a - 31.2;
+    else if (tip === 'proy') v = 141 * a - 19.1;
+    else v = 155 * a - 30;
+    return Math.max(v, 60 * a, 8);
+  }
+  function mosquiteroWM(tip, W, H) {
+    if (tip.startsWith('corr')) { const n = tip === 'corr3' ? 2 : 1; return n * (45.4 + 120.4 * (W / (tip === 'corr3' ? 3 : 2)) * H) }
+    return 40 + 70 * W * H;
+  }
+  function precioWMaker(item) {
+    const W = item.ancho / 1000, H = item.alto / 1000, fc = esColor(item.color) ? 1.27 : 1;
+    const v = VIDRIOS[item.vidrio] || VIDRIOS.dvh;
+    const basico = basicoWM(item.tipologia, W, H) * fc, vidrio = vidrioWM(item.tipologia, W, H) * v.multWM;
+    const mosq = item.mosquitero && TIPOLOGIAS[item.tipologia].mosq ? mosquiteroWM(item.tipologia, W, H) * fc : 0;
+    return { basico, vidrio, mosq, unitario: basico + vidrio + mosq };
+  }
+
+  // ---------- Precio para el presupuesto ----------
+  function precio(item, P) {
+    P = Object.assign({}, PARAMETROS_BASE, P || {});
+    const h = hetmo(item, P);
+    const montaje = P.incluirMontaje ? h.montajeVenta : 0;
+    // Mosquitero: Hetmo lo cotiza con otra ficha; mientras tanto se usa la referencia WMaker.
+    const mosq = item.mosquitero && TIPOLOGIAS[item.tipologia].mosq ? mosquiteroWM(item.tipologia, item.ancho / 1000, item.alto / 1000) * (esColor(item.color) ? 1.27 : 1) : 0;
+    return { carpinteria: h.carpinteria, vidrios: h.vidrios, montaje, mosq, unitario: h.carpinteria + h.vidrios + montaje + mosq, hetmo: h };
+  }
+
+  function descripcion(item) {
+    const t = TIPOLOGIAS[item.tipologia], col = COLORES[item.color] || COLORES.blanco, vid = VIDRIOS[item.vidrio] || VIDRIOS.dvh;
+    let d = t.desc;
+    if (t.hojas > 0) d += ` de ${t.hojas === 1 ? 'una hoja' : t.hojas + ' hojas'}`;
+    d += `, color ${col.nombre.toLowerCase()}, con vidrios ${vid.nombre.toLowerCase()}`;
+    if (item.mosquitero && t.mosq) d += ' y con mosquitero';
+    return d + `. medidas : ${item.ancho}x${item.alto}`;
+  }
+
+  // Descuentos: por renglón (item.descuento), por rubro (P.dtoCarp, dtoVid, dtoMont, dtoMosq),
+  // y general en % (P.descuento) o monto fijo (P.dtoFijo), aplicado a 'todo', 'sin' IVA o 'con' IVA (P.dtoAplica).
+  // Cada renglón va "con IVA" (por defecto) o "sin IVA" (item.iva === 'sin'); el IVA se suma solo a lo que va con IVA.
+  function totales(items, P) {
+    P = Object.assign({}, PARAMETROS_BASE, P || {});
+    const nuevo = () => ({ lista: 0, dtoRenglon: 0, dtoRubros: 0, neto: 0, dtoGeneral: 0, total: 0, iva: 0, totalFinal: 0, carpinteria: 0, vidrios: 0, montaje: 0, mosq: 0, unidades: 0 });
+    const G = { con: nuevo(), sin: nuevo() };
+    const rub = { carpinteria: P.dtoCarp || 0, vidrios: P.dtoVid || 0, montaje: P.dtoMont || 0, mosq: P.dtoMosq || 0 };
+    let compra = 0;
+    for (const it of items) {
+      const p = precio(it, P), n = it.cantidad || 1, fr = 1 - (it.descuento || 0) / 100;
+      const g = G[it.iva === 'sin' ? 'sin' : 'con'];
+      g.lista += p.unitario * n; g.unidades += n; compra += p.hetmo.totalCompra * n;
+      for (const k of Object.keys(rub)) {
+        const bruto = p[k] * n, trasRenglon = bruto * fr, neto = trasRenglon * (1 - rub[k] / 100);
+        g.dtoRenglon += bruto - trasRenglon; g.dtoRubros += trasRenglon - neto; g.neto += neto; g[k] += neto;
+      }
+    }
+    const aplica = P.dtoAplica || 'todo';
+    const objetivo = ['con', 'sin'].filter(k => aplica === 'todo' || aplica === k);
+    const baseObj = objetivo.reduce((s, k) => s + G[k].neto, 0);
+    for (const k of ['con', 'sin']) {
+      const g = G[k];
+      if (objetivo.includes(k)) {
+        g.dtoGeneral = g.neto * (P.descuento || 0) / 100;
+        if (P.dtoFijo && baseObj > 0) g.dtoGeneral += P.dtoFijo * g.neto / baseObj;
+        g.dtoGeneral = Math.min(g.dtoGeneral, g.neto);
+      }
+      g.total = g.neto - g.dtoGeneral;
+      const f = g.neto ? g.total / g.neto : 1;
+      for (const c of Object.keys(rub)) g[c] *= f;
+      g.iva = k === 'con' ? g.total * P.iva / 100 : 0;
+      g.totalFinal = g.total + g.iva;
+    }
+    const sum = c => G.con[c] + G.sin[c];
+    return { grupos: G, lista: sum('lista'), dtoRenglon: sum('dtoRenglon'), dtoRubros: sum('dtoRubros'), dtoGeneral: sum('dtoGeneral'),
+      total: sum('total'), iva: G.con.iva, totalPagar: G.con.totalFinal + G.sin.totalFinal, compra,
+      carpinteria: sum('carpinteria'), vidrios: sum('vidrios'), montaje: sum('montaje'), mosq: sum('mosq'), unidades: sum('unidades'),
+      hayCon: G.con.unidades > 0, haySin: G.sin.unidades > 0 };
+  }
+
+  const api = { TIPOLOGIAS, COLORES, VIDRIOS, PARAMETROS_BASE, ART, hetmo, precio, precioWMaker, descripcion, totales };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.MotorGH = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(() => {
+  const M = window.MotorGH;
+  const $ = id => document.getElementById(id);
+  const fmt = x => (x || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const f3 = x => (x || 0).toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  const KEY = 'gh-cotizador-v2';
+  const PARAM_LABELS = {
+    margen: 'Margen tarifa %', mermaLineal: 'Merma artículos por metro (×)', montajeMl: 'Montaje USD por metro de perímetro',
+    recargoHerrajeGU: 'Recargo herraje GU (×)', iva: 'IVA %',
+  };
+  const ejemplo = () => ({
+    cliente: { nombre: 'Ejemplo · ventanas de prueba Hetmo', dir: '', fecha: new Date().toISOString().slice(0, 10) },
+    items: [
+      { id: 1, cod: 'V1', tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
+      { id: 2, cod: 'V2', tipologia: 'abrir1', ancho: 600, alto: 1000, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
+      { id: 3, cod: 'V3', tipologia: 'pano', ancho: 1000, alto: 1000, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
+      { id: 4, cod: 'V4', tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'golden', vidrio: 'dvh', mosquitero: false },
+    ],
+    params: { tipoCambio: 1565 }, sel: 1, nextId: 5,
+  });
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || ejemplo() } catch { S = ejemplo() }
+  const P = () => Object.assign({}, M.PARAMETROS_BASE, S.params);
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch {} };
+  let editId = null;
+
+  const fill = (sel, obj) => { sel.innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.nombre}${obj === M.TIPOLOGIAS && !v.exacto ? " (aprox.)" : ""}</option>`).join('') };
+  fill($('f-tip'), M.TIPOLOGIAS); fill($('f-color'), M.COLORES); fill($('f-vidrio'), M.VIDRIOS);
+
+  function leerForm() {
+    return { tipologia: $('f-tip').value, cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
+      ancho: Math.max(300, Math.round(+$('f-ancho').value || 0)), alto: Math.max(300, Math.round(+$('f-alto').value || 0)),
+      color: $('f-color').value, vidrio: $('f-vidrio').value, mosquitero: $('f-mosq').checked, descuento: Math.min(100, Math.max(0, +$('f-dto').value || 0)), iva: $('f-iva').value };
+  }
+  function cargarForm(it) {
+    $('f-tip').value = it.tipologia; $('f-cod').value = it.cod || ''; $('f-cant').value = it.cantidad;
+    $('f-ancho').value = it.ancho; $('f-alto').value = it.alto; $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-mosq').checked = !!it.mosquitero; $('f-dto').value = it.descuento || 0; $('f-iva').value = it.iva || 'con';
+  }
+  function sugerirCodigo(tip) { const pre = M.TIPOLOGIAS[tip].prefijo; let n = 1; while (S.items.some(i => i.cod === pre + n)) n++; return pre + n }
+  const chip = t => M.TIPOLOGIAS[t].exacto ? '<span class="chip">Igual a Hetmo</span>' : '<span class="chip warn">Aproximado</span>';
+
+  function dibujar(it) {
+    const t = M.TIPOLOGIAS[it.tipologia];
+    const maxW = 220, maxH = 200, k = Math.min(maxW / it.ancho, maxH / it.alto);
+    const w = it.ancho * k, h = it.alto * k, x0 = 50 + (maxW - w) / 2, y0 = 14 + (maxH - h) / 2;
+    const fr = 7, ink = 'var(--ink)', mut = 'var(--muted)', acc = 'var(--accent)';
+    const marco = it.color && it.color !== 'blanco' ? 'var(--wood)' : ink;
+    let s = `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="${marco}" stroke-width="3"/>`;
+    const glass = (x, y, ww, hh) => `<rect x="${x}" y="${y}" width="${Math.max(ww, 1)}" height="${Math.max(hh, 1)}" fill="var(--accent-soft)" stroke="${mut}" stroke-width="1"/>`;
+    const ix = x0 + fr, iy = y0 + fr, iw = w - 2 * fr, ih = h - 2 * fr;
+    if (it.tipologia === 'pano') s += glass(ix, iy, iw, ih);
+    else if (it.tipologia.startsWith('corr')) {
+      const n = t.hojas, hw = iw / n;
+      for (let i = 0; i < n; i++) {
+        const x = ix + i * hw; s += glass(x + 3, iy + 3, hw - 6, ih - 6) + `<rect x="${x}" y="${iy}" width="${hw}" height="${ih}" fill="none" stroke="${marco}" stroke-width="1.5"/>`;
+        const cy = iy + ih / 2, dir = i % 2 ? -1 : 1, cx = x + hw / 2;
+        s += `<path d="M${cx - 14 * dir} ${cy} h${28 * dir} m${-6 * dir} -5 l${6 * dir} 5 l${-6 * dir} 5" fill="none" stroke="${acc}" stroke-width="1.6"/>`;
+      }
+    } else {
+      const n = t.hojas, hw = iw / n;
+      for (let i = 0; i < n; i++) {
+        const x = ix + i * hw; s += glass(x + 4, iy + 4, hw - 8, ih - 8) + `<rect x="${x}" y="${iy}" width="${hw}" height="${ih}" fill="none" stroke="${marco}" stroke-width="1.5"/>`;
+        const bis = (n === 1 || i === 0) ? x : x + hw, otro = bis === x ? x + hw : x;
+        if (it.tipologia === 'proy') s += `<path d="M${x} ${iy + ih} L${x + hw / 2} ${iy} L${x + hw} ${iy + ih}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+        else {
+          s += `<path d="M${otro} ${iy} L${bis} ${iy + ih / 2} L${otro} ${iy + ih}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+          if (it.tipologia.startsWith('osc')) s += `<path d="M${x} ${iy} L${x + hw / 2} ${iy + ih} L${x + hw} ${iy}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="2 3"/>`;
+        }
+      }
+    }
+    const yb = y0 + h + 16, xl = x0 - 16;
+    s += `<path d="M${x0} ${yb} H${x0 + w} M${x0} ${yb - 4} v8 M${x0 + w} ${yb - 4} v8" stroke="${mut}" stroke-width="1" fill="none"/>`;
+    s += `<text x="${x0 + w / 2}" y="${yb + 14}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}">${it.ancho}</text>`;
+    s += `<path d="M${xl} ${y0} V${y0 + h} M${xl - 4} ${y0} h8 M${xl - 4} ${y0 + h} h8" stroke="${mut}" stroke-width="1" fill="none"/>`;
+    s += `<text x="${xl - 6}" y="${y0 + h / 2}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}" transform="rotate(-90 ${xl - 6} ${y0 + h / 2})">${it.alto}</text>`;
+    $('dibujo').innerHTML = s;
+  }
+
+  function preview() {
+    const it = leerForm(), t = M.TIPOLOGIAS[it.tipologia];
+    $('l-mosq').hidden = !t.mosq;
+    dibujar(it);
+    const p = M.precio(it, P()), wm = M.precioWMaker(it);
+    const rows = [['Carpintería', p.carpinteria], ['Vidrios', p.vidrios]];
+    if (P().incluirMontaje) rows.push(['Montaje', p.montaje]);
+    if (p.mosq) rows.push(['Mosquitero (estimado)', p.mosq]);
+    $('p-chip').innerHTML = chip(it.tipologia);
+    $('p-desg').innerHTML = rows.map(([a, b]) => `<span>${a}</span><span class="num">${fmt(b)}</span>`).join('') +
+      `<span class="tot">USD x U</span><span class="num tot">${fmt(p.unitario)}</span>` +
+      (it.descuento ? `<span>Con ${it.descuento}% dto.</span><span class="num">${fmt(p.unitario * (1 - it.descuento / 100))}</span>` : '') +
+      (it.cantidad > 1 ? `<span class="muted">× ${it.cantidad}</span><span class="num muted">${fmt(p.unitario * (1 - (it.descuento || 0) / 100) * it.cantidad)}</span>` : '') +
+      `<span class="muted">Costo de compra</span><span class="num muted">${fmt(p.hetmo.totalCompra)}</span>` +
+      `<span class="muted">Referencia WMaker</span><span class="num muted">${fmt(wm.unitario)}</span>`;
+    $('p-nota').innerHTML = `<small>Ficha ${t.ficha}. ${t.exacto ? 'Calcula igual que Hetmo.' : 'Armada por analogía con las fichas verificadas: tomala como estimación.'}</small>`;
+  }
+
+  function render() {
+    const PP = P();
+    const tb = $('t-items');
+    if (!S.items.length) tb.innerHTML = `<tr><td colspan="6" class="muted">Todavía no hay aberturas. Cargá una a la izquierda y tocá "Agregar al presupuesto".</td></tr>`;
+    else tb.innerHTML = S.items.map(it => {
+      const p = M.precio(it, PP);
+      const cl = it.id === S.sel ? 'sel' : '';
+      return `<tr class="${cl} sin-borde"><td><strong>${it.cod || '—'}</strong> ${M.TIPOLOGIAS[it.tipologia].exacto ? '' : '<span class="chip warn">aprox.</span>'} ${it.iva === 'sin' ? '<span class="chip">sin IVA</span>' : ''}</td>
+        <td class="num">${it.cantidad}</td><td class="mono" style="white-space:nowrap">${it.ancho} × ${it.alto}</td>
+        <td class="num">${fmt(p.unitario * (1 - (it.descuento || 0) / 100))}${it.descuento ? `<div class="desc">−${it.descuento}% de ${fmt(p.unitario)}</div>` : ''}</td><td class="num">${fmt(p.unitario * (1 - (it.descuento || 0) / 100) * it.cantidad)}</td>
+        <td style="white-space:nowrap"><button class="link" data-ed="${it.id}">Editar</button><button class="link" data-dup="${it.id}">Duplicar</button><button class="link del" data-del="${it.id}">Quitar</button></td></tr><tr class="${cl}"><td colspan="6" class="desc" style="padding-top:0">${M.descripcion(it)}</td></tr>`;
+    }).join('');
+    const uds = S.items.reduce((s, i) => s + i.cantidad, 0);
+    $('pres-cant').textContent = uds ? `${uds} unidad${uds > 1 ? 'es' : ''}` : '';
+    $('t-tc').value = PP.tipoCambio; $('t-montaje').checked = !!PP.incluirMontaje; $('d-aplica').value = PP.dtoAplica;
+    document.querySelectorAll('input.dto').forEach(i => { if (document.activeElement !== i) i.value = PP[i.dataset.k] || '' });
+    const T = M.totales(S.items, PP);
+    const L = (t, v, cls) => v > 0.005 ? `<span class="${cls || ''}">${t}</span><span class="num ${cls || ''}">${v < 0 ? '− ' : ''}USD ${fmt(Math.abs(v))}</span>` : '';
+    const bloque = (titulo, g, conIva) => `<span class="grupo">${titulo}</span>
+      ${L('Precio Hetmo', g.lista)}
+      ${g.dtoRenglon > 0.005 ? `<span>Dto. por renglón</span><span class="num">− USD ${fmt(g.dtoRenglon)}</span>` : ''}
+      ${g.dtoRubros > 0.005 ? `<span>Dto. por rubro</span><span class="num">− USD ${fmt(g.dtoRubros)}</span>` : ''}
+      ${g.dtoGeneral > 0.005 ? `<span>Dto. general</span><span class="num">− USD ${fmt(g.dtoGeneral)}</span>` : ''}
+      <span><strong>${conIva ? 'Neto antes de IVA' : 'Total sin IVA'}</strong></span><span class="num"><strong>USD ${fmt(g.total)}</strong></span>
+      ${conIva ? `<span>IVA ${PP.iva}%</span><span class="num">USD ${fmt(g.iva)}</span><span><strong>Total con IVA</strong></span><span class="num"><strong>USD ${fmt(g.totalFinal)}</strong></span>` : ''}`;
+    $('t-tot').innerHTML = (T.hayCon ? bloque(T.haySin ? 'Con IVA' : 'Presupuesto', T.grupos.con, true) : '') + (T.haySin ? bloque('Sin IVA', T.grupos.sin, false) : '') + `
+      <span class="sep"></span>
+      <span class="big">A pagar</span><span class="num big">USD ${fmt(T.totalPagar)}</span>
+      <span class="muted">Carpintería</span><span class="num muted">USD ${fmt(T.carpinteria)}</span>
+      <span class="muted">Vidrios</span><span class="num muted">USD ${fmt(T.vidrios)}</span>
+      ${T.montaje > 0.005 ? `<span class="muted">Montaje</span><span class="num muted">USD ${fmt(T.montaje)}</span>` : ''}
+      ${T.mosq > 0.005 ? `<span class="muted">Mosquiteros (estimado)</span><span class="num muted">USD ${fmt(T.mosq)}</span>` : ''}
+      <span class="muted">Costo de compra</span><span class="num muted">USD ${fmt(T.compra)}</span>
+      <span class="muted">Margen sobre costo</span><span class="num muted">USD ${fmt(T.total - T.compra)}</span>`;
+    renderHetmo(); save();
+  }
+
+  function documento() {
+    const PP = P(), T = M.totales(S.items, PP), c = S.cliente;
+    const f = c.fecha ? c.fecha.split('-').reverse().join('/') : '';
+    let s = `GH Aberturas S.R.L.\nFecha: ${f}\nSres. ${c.nombre || ''}   Dir. ${c.dir || ''}\n\n`;
+    for (const it of S.items) {
+      const p = M.precio(it, PP);
+      const u = p.unitario * (1 - (it.descuento || 0) / 100);
+      s += `${it.cod || ''}   Uds. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(u)}   Total ${fmt(u * it.cantidad)}\n${M.descripcion(it)}\n\n`;
+    }
+    const G = T.grupos, linea = (t, v) => v > 0.005 ? `${t} : USD ${fmt(v)}\n` : '';
+    const bloque = (titulo, g, conIva) => {
+      let t = titulo ? `${titulo}\n` : '';
+      if (g.dtoRenglon + g.dtoRubros + g.dtoGeneral > 0.005) t += linea('Sub-total', g.lista - g.dtoRenglon) + linea('Descuento', g.dtoRubros + g.dtoGeneral);
+      t += conIva ? `Total : USD ${fmt(g.total)} + I.V.A. (USD ${fmt(g.iva)}) = USD ${fmt(g.totalFinal)}\n\n` : `Total : USD ${fmt(g.total)}\n\n`;
+      return t;
+    };
+    if (T.hayCon) s += bloque(T.haySin ? 'CON IVA' : '', G.con, true);
+    if (T.haySin) s += bloque('SIN IVA', G.sin, false);
+    if (T.hayCon && T.haySin) s += `TOTAL A PAGAR : USD ${fmt(T.totalPagar)}\n\n`;
+    s += linea('Carpintería', T.carpinteria) + linea('Vidrios', T.vidrios) + linea('Montaje', T.montaje) + linea('Mosquiteros', T.mosq);
+    s += `\nForma de pago 60% adelanto, 40% a contraentrega y colocación. Plazo de entrega en color Blanco 60/80 días - Color 80/110 días. Precio del dolar tipo vendedor del Banco Nación del día de pago.\nEn caso de ser necesario IZAJE será cotizado aparte.`;
+    return s;
+  }
+
+  function renderHetmo() {
+    const sel = $('h-item'); const prev = +sel.value || S.sel;
+    sel.innerHTML = S.items.map(i => `<option value="${i.id}">${i.cod || '—'} · ${M.TIPOLOGIAS[i.tipologia].nombre} ${i.ancho}×${i.alto} ${M.COLORES[i.color].nombre}</option>`).join('');
+    const it = S.items.find(i => i.id === prev) || S.items[0];
+    if (!it) { $('h-det').innerHTML = `<tr><td colspan="7" class="muted">Agregá una abertura al presupuesto para ver su despiece.</td></tr>`; $('h-res').innerHTML = ''; $('h-chip').innerHTML = ''; return }
+    sel.value = it.id; $('h-chip').innerHTML = chip(it.tipologia);
+    const PP = P(), h = M.hetmo(it, PP), mg = 1 + PP.margen / 100;
+    const N = { perfiles: 'Perfiles', refuerzos: 'Refuerzos', juntas: 'Juntas', tornilleria: 'Tornillería', accesorios: 'Accesorios', vidrios: 'Vidrios', tapajuntas: 'Tapajuntas', herraje: 'Herraje', fabricacion: 'Fabricación ventana', acristalamiento: 'Acristalamiento' };
+    $('h-res').innerHTML = Object.keys(N).map(k => `<tr><td>${N[k]}</td><td class="num">${f3(h.compra[k])}</td><td class="num">${f3(h.venta1Grupos[k])}</td><td class="num">${PP.margen}</td><td class="num">${f3(h.venta1Grupos[k] * mg)}</td></tr>`).join('') +
+      `<tr><td>Montaje</td><td class="num">0</td><td class="num">${f3(h.montaje)}</td><td class="num">${PP.margen}</td><td class="num">${f3(h.montaje * mg)}</td></tr>` +
+      `<tr><td><strong>Total compra / venta 1 / venta</strong></td><td class="num"><strong>${fmt(h.totalCompra)}</strong></td><td class="num"><strong>${fmt(h.venta1)}</strong></td><td></td><td class="num"><strong>${fmt(h.venta)}</strong></td></tr>`;
+    $('h-det').innerHTML = h.detalle.map(d => `<tr><td class="mono">${d.cod}</td><td>${d.desc}</td><td class="num">${d.unidad === 'm²' ? f3(d.cant) + ' m²' : d.unidad === 'm' && !d.largo ? f3(d.cant) + ' m' : d.uds}</td><td class="num mono">${d.largo || ''}</td><td class="muted">${d.det}</td><td class="num">${f3(d.precio)}</td><td class="num">${f3(d.importe)}</td></tr>`).join('');
+  }
+
+  function renderParams() { const p = P(); $('params').innerHTML = Object.keys(PARAM_LABELS).map(k => `<label>${PARAM_LABELS[k]}<input type="number" step="any" id="p-${k}" data-k="${k}" value="${p[k]}"></label>`).join('') }
+
+  function validar() {
+    const casos = [['V1 corrediza 1500×1100 blanca', { tipologia: 'corr2', ancho: 1500, alto: 1100, color: 'blanco', vidrio: 'dvh' }, 389.25, 757.77],
+      ['V4 corrediza 1500×1100 golden oak', { tipologia: 'corr2', ancho: 1500, alto: 1100, color: 'golden', vidrio: 'dvh' }, 455.43, 866.63],
+      ['V2 abrir 600×1000 blanca', { tipologia: 'abrir1', ancho: 600, alto: 1000, color: 'blanco', vidrio: 'dvh' }, 207.82, 414.35],
+      ['V3 paño fijo 1000×1000 blanco', { tipologia: 'pano', ancho: 1000, alto: 1000, color: 'blanco', vidrio: 'dvh' }, 144.00, 336.25]];
+    let maxd = 0;
+    $('v-tab').innerHTML = casos.map(([n, it, c, v]) => {
+      const h = M.hetmo(it, Object.assign({}, S.params, { tipoCambio: 1540 })), d = (h.venta - v) / v; maxd = Math.max(maxd, Math.abs(d));
+      return `<tr><td>${n}</td><td class="num">${fmt(c)}</td><td class="num">${fmt(h.totalCompra)}</td><td class="num">${fmt(v)}</td><td class="num">${fmt(h.venta)}</td><td class="num ${Math.abs(d) < .001 ? 'e-ok' : 'e-mid'}">${(d * 100).toFixed(2)}%</td></tr>`;
+    }).join('');
+    $('v-res').textContent = maxd < .001 ? '4 de 4 ventanas iguales a Hetmo' : `diferencia máxima ${(maxd * 100).toFixed(2)}%`;
+  }
+
+  // eventos
+  ['f-tip', 'f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-mosq', 'f-dto', 'f-iva'].forEach(id => $(id).addEventListener('input', preview));
+  $('f-tip').addEventListener('change', () => { if (!editId) $('f-cod').value = sugerirCodigo($('f-tip').value) });
+  $('f-item').addEventListener('submit', e => {
+    e.preventDefault(); const it = leerForm(); if (!it.cod) it.cod = sugerirCodigo(it.tipologia);
+    if (editId) { Object.assign(S.items.find(i => i.id === editId), it); S.sel = editId; toast('Abertura actualizada') }
+    else { it.id = S.nextId++; S.items.push(it); S.sel = it.id; toast('Agregada al presupuesto') }
+    $('h-item').value = S.sel; salirEdicion(); render();
+  });
+  function salirEdicion() { editId = null; $('b-guardar').textContent = 'Agregar al presupuesto'; $('b-cancelar').hidden = true; $('modo-chip').textContent = 'Nueva'; $('f-cod').value = sugerirCodigo($('f-tip').value); preview() }
+  $('b-cancelar').addEventListener('click', salirEdicion);
+  $('t-items').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.ed) { const it = S.items.find(i => i.id === +b.dataset.ed); editId = it.id; S.sel = it.id; cargarForm(it); $('b-guardar').textContent = 'Guardar cambios'; $('b-cancelar').hidden = false; $('modo-chip').textContent = 'Editando ' + (it.cod || ''); $('h-item').value = it.id; preview(); render(); $('f-ancho').focus() }
+    if (b.dataset.dup) { const it = S.items.find(i => i.id === +b.dataset.dup); const n = Object.assign({}, it, { id: S.nextId++, cod: sugerirCodigo(it.tipologia) }); S.items.push(n); S.sel = n.id; render(); toast('Duplicada como ' + n.cod) }
+    if (b.dataset.del) { S.items = S.items.filter(i => i.id !== +b.dataset.del); if (editId === +b.dataset.del) salirEdicion(); render() }
+  });
+  document.querySelectorAll('input.dto').forEach(i => i.addEventListener('input', e => { S.params[e.target.dataset.k] = Math.max(0, +e.target.value || 0); render() }));
+  $('d-aplica').addEventListener('change', e => { S.params.dtoAplica = e.target.value; render() });
+  $('t-tc').addEventListener('input', e => { const v = +e.target.value; if (v > 0) { S.params.tipoCambio = v; render(); preview() } });
+  $('t-montaje').addEventListener('change', e => { S.params.incluirMontaje = e.target.checked ? 1 : 0; render(); preview() });
+  ['nombre', 'dir', 'fecha'].forEach(k => $('c-' + k).addEventListener('input', e => { S.cliente[k] = e.target.value; save() }));
+  $('b-copiar').addEventListener('click', () => {
+    const txt = documento();
+    navigator.clipboard.writeText(txt).then(() => toast('Presupuesto copiado'), () => { toast('No se pudo copiar en este navegador') });
+  });
+  $('b-nuevo').addEventListener('click', () => { $('confirm-nuevo').hidden = false });
+  $('b-no').addEventListener('click', () => { $('confirm-nuevo').hidden = true });
+  $('b-si').addEventListener('click', () => { S = { cliente: { nombre: '', dir: '', fecha: new Date().toISOString().slice(0, 10) }, items: [], params: S.params, sel: null, nextId: 1 }; $('confirm-nuevo').hidden = true; initCliente(); salirEdicion(); render() });
+  $('h-item').addEventListener('change', renderHetmo);
+  $('params').addEventListener('input', e => { const k = e.target.dataset.k; if (!k) return; const v = parseFloat(e.target.value); if (isNaN(v)) return; S.params[k] = v; render(); preview(); validar() });
+  $('b-reset').addEventListener('click', () => { S.params = { tipoCambio: S.params.tipoCambio }; renderParams(); render(); preview(); validar(); toast('Parámetros restablecidos') });
+
+  let tt; function toast(m) { const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 1800) }
+  function initCliente() { $('c-nombre').value = S.cliente.nombre || ''; $('c-dir').value = S.cliente.dir || ''; $('c-fecha').value = S.cliente.fecha || '' }
+
+  initCliente(); renderParams();
+  const first = S.items.find(i => i.id === S.sel) || { tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false };
+  cargarForm(Object.assign({}, first, { cod: '' })); $('f-cod').value = sugerirCodigo(first.tipologia);
+  preview(); render(); validar();
+})();
+</script>
+
+</html>
