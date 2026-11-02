@@ -238,8 +238,14 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   </details>
 
   <details class="card" id="d-params">
-    <summary>Parámetros de cálculo</summary>
+    <summary>Logo y parámetros de cálculo</summary>
     <div class="in">
+      <div class="row" style="align-items:center">
+        <div id="logo-prev" style="width:180px;height:70px;border:1px dashed var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;background:#fff;overflow:hidden"><small class="muted" style="color:#5d6b67">Sin logo</small></div>
+        <label style="flex:1 1 220px">Logo de GH para los PDF (PNG o JPG)<input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
+        <button type="button" id="logo-quitar" hidden>Quitar logo</button>
+      </div>
+      <p class="muted" style="margin:0" id="logo-nota"><small>Se sube una sola vez y sale en todos los PDF.</small></p>
       <div class="params" id="params"></div>
       <div class="row"><button type="button" id="b-reset">Volver a los valores de fábrica</button></div>
     </div>
@@ -702,6 +708,80 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     lam33:      { nombre: 'Laminado 3+3 incoloro',        cod: '3+3 INC',        ars: 54980, camara: null, wmaker: 'laminado 3+3 incoloro', multWM: 0.55 },
     float4:     { nombre: 'Float 4 mm incoloro',          cod: '4 INC',          ars: 17190, camara: null, wmaker: 'float 4mm incoloro', multWM: 0.24 },
     sat4:       { nombre: 'Satinado 4 mm',                cod: '4 SAT',          ars: 61098, camara: null, wmaker: 'satinado 4mm', multWM: 0.60 },
+    // Resto de la lista de almacén de Hetmo (pesos por m² ×1,001 como los toma Hetmo)
+    "4 OP": { nombre: "Float 4 mm opacid", cod: "4 OP", ars: 14709, camara: null },
+    "4 TEMP": { nombre: "4 mm templado", cod: "4 TEMP", ars: 37186, camara: null },
+    "4/9/4 GR": { nombre: "DVH 4/9/4 gris", cod: "4/9/4 GR", ars: 37607, camara: "C9" },
+    "4/9/4 INC": { nombre: "DVH 4/9/4 incoloro", cod: "4/9/4 INC", ars: 34379, camara: "C9" },
+    "3+3 ESM": { nombre: "Laminado 3+3 esmerilado", cod: "3+3 ESM", ars: 85088, camara: null },
+    "3+3/12/3+3 INC": { nombre: "DVH 3+3/12/3+3 incoloro", cod: "3+3/12/3+3 INC", ars: 109959, camara: "C12" },
+    "3+3/12/4 INC": { nombre: "DVH 3+3/12/4 incoloro", cod: "3+3/12/4 INC", ars: 72169, camara: "C12" },
+    "3+3/12/4+4 INC": { nombre: "DVH 3+3/12/4+4 incoloro", cod: "3+3/12/4+4 INC", ars: 122958, camara: "C12" },
+    "3+3/12/5 INC": { nombre: "DVH 3+3/12/5 incoloro", cod: "3+3/12/5 INC", ars: 77241, camara: "C12" },
+    "3+3/12/5+5 INC": { nombre: "DVH 3+3/12/5+5 incoloro", cod: "3+3/12/5+5 INC", ars: 128107, camara: "C12" },
+    "3+3/12/6 INC": { nombre: "DVH 3+3/12/6 incoloro", cod: "3+3/12/6 INC", ars: 84154, camara: "C12" },
+    "3+3/15/3+3 INC": { nombre: "DVH 3+3/15/3+3 incoloro", cod: "3+3/15/3+3 INC", ars: 109959, camara: "C12" },
+    "3+3/15/4+4 INC": { nombre: "DVH 3+3/15/4+4 incoloro", cod: "3+3/15/4+4 INC", ars: 122958, camara: "C12" },
+    "3+3/6/4 INC": { nombre: "DVH 3+3/6/4 incoloro", cod: "3+3/6/4 INC", ars: 72169, camara: "C9" },
+    "3+3/9/4 OP": { nombre: "DVH 3+3/9/4 opacid", cod: "3+3/9/4 OP", ars: 69943, camara: "C9" },
+    "3+3/9/4+4 INC": { nombre: "DVH 3+3/9/4+4 incoloro", cod: "3+3/9/4+4 INC", ars: 122958, camara: "C9" },
+    "3+3/9/5 GR": { nombre: "DVH 3+3/9/5 gris", cod: "3+3/9/5 GR", ars: 28968, camara: "C9" },
+    "3+3/9/5 INC": { nombre: "DVH 3+3/9/5 incoloro", cod: "3+3/9/5 INC", ars: 77241, camara: "C9" },
+    "3+3/9/5 Temp": { nombre: "DVH 3+3/9/5 templado", cod: "3+3/9/5 Temp", ars: 99042, camara: "C9" },
+    "3+3/9/5+5 INC": { nombre: "DVH 3+3/9/5+5 incoloro", cod: "3+3/9/5+5 INC", ars: 128107, camara: "C9" },
+    "3+3/9/6 INC": { nombre: "DVH 3+3/9/6 incoloro", cod: "3+3/9/6 INC", ars: 84154, camara: "C9" },
+    "3+3/9/6TEMP": { nombre: "DVH 3+3/9/6 templado", cod: "3+3/9/6TEMP", ars: 105041, camara: "C9" },
+    "3+5/12/4+4": { nombre: "DVH 3+5/12/4+4", cod: "3+5/12/4+4", ars: 109620, camara: "C12" },
+    "4+4 INC": { nombre: "Laminado 4+4 incoloro", cod: "4+4 INC", ars: 67978, camara: null },
+    "4+4/12/4 INC": { nombre: "DVH 4+4/12/4 incoloro", cod: "4+4/12/4 INC", ars: 85168, camara: "C12" },
+    "4+4/12/4+4 INC": { nombre: "DVH 4+4/12/4+4 incoloro", cod: "4+4/12/4+4 INC", ars: 135956, camara: "C12" },
+    "4+4/12/5 INC": { nombre: "DVH 4+4/12/5 incoloro", cod: "4+4/12/5 INC", ars: 90240, camara: "C12" },
+    "4+4/12/5+5 INC": { nombre: "DVH 4+4/12/5+5 incoloro", cod: "4+4/12/5+5 INC", ars: 141105, camara: "C12" },
+    "4+4/12/6 INC": { nombre: "DVH 4+4/12/6 incoloro", cod: "4+4/12/6 INC", ars: 97152, camara: "C12" },
+    "4+4/12/6T": { nombre: "DVH 4+4/12/6 templado", cod: "4+4/12/6T", ars: 118039, camara: "C12" },
+    "4+4/12/8temp": { nombre: "DVH 4+4/12/8 templado", cod: "4+4/12/8temp", ars: 127335, camara: "C12" },
+    "4+4/15/4+4 INC": { nombre: "DVH 4+4/15/4+4 incoloro", cod: "4+4/15/4+4 INC", ars: 135956, camara: "C12" },
+    "4+4/15/5+5 INC": { nombre: "DVH 4+4/15/5+5 incoloro", cod: "4+4/15/5+5 INC", ars: 141105, camara: "C12" },
+    "4+4/9/4 INC": { nombre: "DVH 4+4/9/4 incoloro", cod: "4+4/9/4 INC", ars: 85168, camara: "C9" },
+    "4+4/9/4+4 INC": { nombre: "DVH 4+4/9/4+4 incoloro", cod: "4+4/9/4+4 INC", ars: 135956, camara: "C9" },
+    "4+4/9/5 INC": { nombre: "DVH 4+4/9/5 incoloro", cod: "4+4/9/5 INC", ars: 90240, camara: "C9" },
+    "4+4/9/5+5 INC": { nombre: "DVH 4+4/9/5+5 incoloro", cod: "4+4/9/5+5 INC", ars: 141105, camara: "C9" },
+    "4+4/9/6 INC": { nombre: "DVH 4+4/9/6 incoloro", cod: "4+4/9/6 INC", ars: 97152, camara: "C9" },
+    "4+4/9/6TEMP": { nombre: "DVH 4+4/9/6 templado", cod: "4+4/9/6TEMP", ars: 118039, camara: "C9" },
+    "5 BCE": { nombre: "Float 5 mm bronce", cod: "5 BCE", ars: 54108, camara: null },
+    "5 GR": { nombre: "Float 5 mm gris", cod: "5 GR", ars: 54108, camara: null },
+    "5 INC": { nombre: "Float 5 mm incoloro", cod: "5 INC", ars: 22262, camara: null },
+    "5 TEMP": { nombre: "5 mm templado", cod: "5 TEMP", ars: 44062, camara: null },
+    "5 Temp/9/5 Temp": { nombre: "DVH 5/9/5 templado", cod: "5 Temp/9/5 Temp", ars: 88125, camara: "C9" },
+    "5/12/5 BCE": { nombre: "DVH 5/12/5 bronce", cod: "5/12/5 BCE", ars: 48017, camara: "C12" },
+    "5/12/5 GR": { nombre: "DVH 5/12/5 gris", cod: "5/12/5 GR", ars: 48017, camara: "C12" },
+    "5/12/5 INC": { nombre: "DVH 5/12/5 incoloro", cod: "5/12/5 INC", ars: 44524, camara: "C12" },
+    "5/9/5 BCE": { nombre: "DVH 5/9/5 bronce", cod: "5/9/5 BCE", ars: 48017, camara: "C9" },
+    "5/9/5 INC": { nombre: "DVH 5/9/5 incoloro", cod: "5/9/5 INC", ars: 44524, camara: "C9" },
+    "5+5 ESM": { nombre: "Laminado 5+5 esmerilado", cod: "5+5 ESM", ars: 93774, camara: null },
+    "5+5 INC": { nombre: "Laminado 5+5 incoloro", cod: "5+5 INC", ars: 73127, camara: null },
+    "5+5/12/4 INC": { nombre: "DVH 5+5/12/4 incoloro", cod: "5+5/12/4 INC", ars: 90317, camara: "C12" },
+    "5+5/12/5 INC": { nombre: "DVH 5+5/12/5 incoloro", cod: "5+5/12/5 INC", ars: 95389, camara: "C12" },
+    "5+5/12/5+5 INC": { nombre: "DVH 5+5/12/5+5 incoloro", cod: "5+5/12/5+5 INC", ars: 146254, camara: "C12" },
+    "5+5/12/6 INC": { nombre: "DVH 5+5/12/6 incoloro", cod: "5+5/12/6 INC", ars: 102301, camara: "C12" },
+    "5+5/15/5+5 INC": { nombre: "DVH 5+5/15/5+5 incoloro", cod: "5+5/15/5+5 INC", ars: 146254, camara: "C12" },
+    "5+5/9/4 INC": { nombre: "DVH 5+5/9/4 incoloro", cod: "5+5/9/4 INC", ars: 90317, camara: "C9" },
+    "5+5/9/5 INC": { nombre: "DVH 5+5/9/5 incoloro", cod: "5+5/9/5 INC", ars: 95389, camara: "C9" },
+    "5+5/9/5+5 INC": { nombre: "DVH 5+5/9/5+5 incoloro", cod: "5+5/9/5+5 INC", ars: 146254, camara: "C9" },
+    "5+5/9/6 INC": { nombre: "DVH 5+5/9/6 incoloro", cod: "5+5/9/6 INC", ars: 87538, camara: "C9" },
+    "5T/12/5T": { nombre: "DVH 5/12/5 templado", cod: "5T/12/5T", ars: 75408, camara: "C12" },
+    "6 INC": { nombre: "Float 6 mm incoloro", cod: "6 INC", ars: 29174, camara: null },
+    "6/12/6 INC": { nombre: "DVH 6/12/6 incoloro", cod: "6/12/6 INC", ars: 58348, camara: "C12" },
+    "6/9/6 BCE": { nombre: "DVH 6/9/6 bronce", cod: "6/9/6 BCE", ars: 60614, camara: "C9" },
+    "6/9/6 INC": { nombre: "DVH 6/9/6 incoloro", cod: "6/9/6 INC", ars: 58348, camara: "C9" },
+    "6+6/12/4 INC": { nombre: "DVH 6+6/12/4 incoloro", cod: "6+6/12/4 INC", ars: 61755, camara: "C12" },
+    "6+6/12/5 INC": { nombre: "DVH 6+6/12/5 incoloro", cod: "6+6/12/5 INC", ars: 66095, camara: "C12" },
+    "6+6/12/6 INC": { nombre: "DVH 6+6/12/6 incoloro", cod: "6+6/12/6 INC", ars: 72009, camara: "C12" },
+    "6+6/9/4 INC": { nombre: "DVH 6+6/9/4 incoloro", cod: "6+6/9/4 INC", ars: 77284, camara: "C9" },
+    "6+6/9/6 INC": { nombre: "DVH 6+6/9/6 incoloro", cod: "6+6/9/6 INC", ars: 87538, camara: "C9" },
+    "6T/12/3+3 INC": { nombre: "DVH 6 templado/12/3+3", cod: "6T/12/3+3 INC", ars: 105041, camara: "C12" },
+    "6T/12/6T": { nombre: "DVH 6/12/6 templado", cod: "6T/12/6T", ars: 100123, camara: "C12" },
+    "8 TEMP": { nombre: "8 mm templado", cod: "8 TEMP", ars: 59357, camara: null },
   };
   const CAMARAS = { C9: 11996, C12: 13979, C20: 18369 };
 
@@ -1102,7 +1182,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   let F = { division: 'no', secciones: [sec('corrediza', 2, { mano: 'izq' })] };
 
   const opts = obj => Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.nombre}</option>`).join('');
-  $('f-color').innerHTML = opts(M.COLORES); $('f-vidrio').innerHTML = opts(M.VIDRIOS);
+  $('f-color').innerHTML = opts(M.COLORES);
+  {
+    const V = Object.entries(M.VIDRIOS), o = l => l.sort((a, b) => a[1].nombre.localeCompare(b[1].nombre, 'es', { numeric: true })).map(([k, v]) => `<option value="${k}">${v.nombre}</option>`).join('');
+    const top = ['dvh', 'dvh_lam', 'dvh_lamlam', 'dvh_temp', 'dvh_sat', 'lam33', 'float4'];
+    $('f-vidrio').innerHTML = `<optgroup label="Más usados">${top.map(k => `<option value="${k}">${M.VIDRIOS[k].nombre}</option>`).join('')}</optgroup>` +
+      `<optgroup label="DVH (doble vidriado)">${o(V.filter(([k, v]) => v.camara && !top.includes(k)))}</optgroup>` +
+      `<optgroup label="Vidrio simple">${o(V.filter(([k, v]) => !v.camara && !top.includes(k)))}</optgroup>`;
+  }
 
   function itemForm() {
     return { cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
@@ -1466,9 +1553,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     const num = pres.numero ? String(pres.numero).padStart(4, '0') : 'borrador';
     const fecha = pres.cliente && pres.cliente.fecha ? pres.cliente.fecha.split('-').reverse().join('/') : '';
     // encabezado
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...negro); doc.text('GH Aberturas S.R.L.', mL, y + 2);
+    let xt = mL;
+    if (Empresa.logo) {
+      try {
+        const dim = await medirImg(Empresa.logo), hL = 15, wL = Math.min(50, hL * dim.w / dim.h);
+        doc.addImage(Empresa.logo, Empresa.logo.startsWith('data:image/png') ? 'PNG' : 'JPEG', mL, y - 4, wL, wL * dim.h / dim.w);
+        xt = mL + wL + 5;
+      } catch {}
+    }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...negro); doc.text('GH Aberturas S.R.L.', xt, y + 2);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...gris);
-    doc.text('Aberturas de PVC · Av. Brig. Gral. Juan Manuel de Rosas 29', mL, y + 7); doc.text('11 6980 6906 · gherrou@aberturasgh.com.ar', mL, y + 11);
+    doc.text('Aberturas de PVC · Av. Brig. Gral. Juan Manuel de Rosas 29', xt, y + 7); doc.text('11 6980 6906 · gherrou@aberturasgh.com.ar', xt, y + 11);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...verde);
     doc.text(interno ? 'PRESUPUESTO · USO INTERNO' : 'PRESUPUESTO', W - mR, y + 1, { align: 'right' });
     doc.setFontSize(10); doc.setTextColor(...negro); doc.text('N° ' + num + (fecha ? '   ·   ' + fecha : ''), W - mR, y + 7, { align: 'right' });
@@ -1547,7 +1642,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     const cond = doc.splitTextToSize('Forma de pago: 60% de adelanto y 40% contra entrega y colocación. Plazo de entrega: color blanco 60/80 días, colores 80/110 días. Precio en dólares tipo vendedor del Banco Nación del día de pago. En caso de ser necesario, el izaje se cotiza aparte.', ancho);
     doc.text(cond, mL, y);
     const pags = doc.getNumberOfPages();
-    for (let i = 1; i <= pags; i++) { doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(...gris); doc.text(`GH Aberturas · Presupuesto N° ${num} · página ${i} de ${pags}`, W / 2, 291, { align: 'center' }) }
+    for (let i = 1; i <= pags; i++) { doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(...gris); doc.text(`GH Aberturas · Presupuesto N° ${num} · página ${i} de ${pags}`, W / 2, 291, { align: 'center' }); doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(...verde); doc.text('VIVIR MEJOR ES POSIBLE', W / 2, 286.5, { align: 'center' }); doc.setFont('helvetica', 'normal') }
     const nombre = `Presupuesto ${num} ${(pres.cliente && pres.cliente.nombre || '').replace(/[^\wÁÉÍÓÚáéíóúÑñ .-]/g, '').trim()}${interno ? ' (interno)' : ''}.pdf`.replace(/\s+/g, ' ');
     const blob = doc.output('blob');
     const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
@@ -1559,6 +1654,49 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     }
   }
   const presActual = () => ({ numero: S.numero, cliente: S.cliente, items: S.items, params: S.params });
+
+  // ----- logo de la empresa -----
+  // Se guarda en la base compartida (config/empresa) o, en el archivo suelto, en este navegador.
+  const Empresa = { logo: null, ref: null };
+  function medirImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res({ w: i.naturalWidth || 1, h: i.naturalHeight || 1 }); i.onerror = rej; i.src = src }) }
+  function mostrarLogo() {
+    $('logo-prev').innerHTML = Empresa.logo ? `<img src="${Empresa.logo}" alt="Logo" style="max-width:100%;max-height:100%">` : '<small style="color:#5d6b67">Sin logo</small>';
+    $('logo-quitar').hidden = !Empresa.logo;
+  }
+  async function initEmpresa() {
+    const db = window.claude && window.claude.use ? await window.claude.use('db') : null;
+    if (db) {
+      Empresa.ref = db.doc('config/empresa');
+      Empresa.ref.onSnapshot(d => { Empresa.logo = d.exists ? (d.data().logo || null) : null; mostrarLogo() }, () => {});
+    } else { try { Empresa.logo = localStorage.getItem('gh-logo') } catch {} mostrarLogo() }
+  }
+  async function guardarLogo(dataUrl) {
+    Empresa.logo = dataUrl; mostrarLogo();
+    try {
+      if (Empresa.ref) await Empresa.ref.set({ logo: dataUrl });
+      else if (dataUrl) localStorage.setItem('gh-logo', dataUrl); else localStorage.removeItem('gh-logo');
+      toast(dataUrl ? 'Logo guardado' : 'Logo quitado');
+    } catch (e) { toast('No se pudo guardar el logo (' + (e && e.code || 'error') + ')') }
+  }
+  $('logo-file').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 600 / img.naturalWidth, 300 / img.naturalHeight), c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let url = c.toDataURL('image/png');
+        if (url.length > 180000) { const x = c.getContext('2d'); const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height; const y2 = c2.getContext('2d'); y2.fillStyle = '#fff'; y2.fillRect(0, 0, c2.width, c2.height); y2.drawImage(c, 0, 0); url = c2.toDataURL('image/jpeg', 0.9) }
+        guardarLogo(url); e.target.value = '';
+      };
+      img.onerror = () => toast('No se pudo leer esa imagen');
+      img.src = r.result;
+    };
+    r.readAsDataURL(f);
+  });
+  $('logo-quitar').addEventListener('click', () => guardarLogo(null));
 
   // ----- eventos -----
   ['f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-dto', 'f-iva'].forEach(id => $(id).addEventListener('input', () => { if (id === 'f-ancho' || id === 'f-alto') renderSecs(); preview() }));
@@ -1621,7 +1759,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   const first = S.items.find(i => i.id === S.sel);
   if (first) cargarForm(Object.assign({}, first)); else renderSecs();
   $('f-cod').value = sugerirCodigo();
-  preview(); render(); validar(); marcarCambios(); Archivo.init();
+  preview(); render(); validar(); marcarCambios(); Archivo.init(); initEmpresa();
 })();
 </script>
 

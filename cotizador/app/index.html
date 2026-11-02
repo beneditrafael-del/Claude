@@ -235,8 +235,14 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   </details>
 
   <details class="card" id="d-params">
-    <summary>Parámetros de cálculo</summary>
+    <summary>Logo y parámetros de cálculo</summary>
     <div class="in">
+      <div class="row" style="align-items:center">
+        <div id="logo-prev" style="width:180px;height:70px;border:1px dashed var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;background:#fff;overflow:hidden"><small class="muted" style="color:#5d6b67">Sin logo</small></div>
+        <label style="flex:1 1 220px">Logo de GH para los PDF (PNG o JPG)<input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
+        <button type="button" id="logo-quitar" hidden>Quitar logo</button>
+      </div>
+      <p class="muted" style="margin:0" id="logo-nota"><small>Se sube una sola vez y sale en todos los PDF.</small></p>
       <div class="params" id="params"></div>
       <div class="row"><button type="button" id="b-reset">Volver a los valores de fábrica</button></div>
     </div>
@@ -287,7 +293,14 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   let F = { division: 'no', secciones: [sec('corrediza', 2, { mano: 'izq' })] };
 
   const opts = obj => Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.nombre}</option>`).join('');
-  $('f-color').innerHTML = opts(M.COLORES); $('f-vidrio').innerHTML = opts(M.VIDRIOS);
+  $('f-color').innerHTML = opts(M.COLORES);
+  {
+    const V = Object.entries(M.VIDRIOS), o = l => l.sort((a, b) => a[1].nombre.localeCompare(b[1].nombre, 'es', { numeric: true })).map(([k, v]) => `<option value="${k}">${v.nombre}</option>`).join('');
+    const top = ['dvh', 'dvh_lam', 'dvh_lamlam', 'dvh_temp', 'dvh_sat', 'lam33', 'float4'];
+    $('f-vidrio').innerHTML = `<optgroup label="Más usados">${top.map(k => `<option value="${k}">${M.VIDRIOS[k].nombre}</option>`).join('')}</optgroup>` +
+      `<optgroup label="DVH (doble vidriado)">${o(V.filter(([k, v]) => v.camara && !top.includes(k)))}</optgroup>` +
+      `<optgroup label="Vidrio simple">${o(V.filter(([k, v]) => !v.camara && !top.includes(k)))}</optgroup>`;
+  }
 
   function itemForm() {
     return { cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
@@ -651,9 +664,17 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     const num = pres.numero ? String(pres.numero).padStart(4, '0') : 'borrador';
     const fecha = pres.cliente && pres.cliente.fecha ? pres.cliente.fecha.split('-').reverse().join('/') : '';
     // encabezado
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...negro); doc.text('GH Aberturas S.R.L.', mL, y + 2);
+    let xt = mL;
+    if (Empresa.logo) {
+      try {
+        const dim = await medirImg(Empresa.logo), hL = 15, wL = Math.min(50, hL * dim.w / dim.h);
+        doc.addImage(Empresa.logo, Empresa.logo.startsWith('data:image/png') ? 'PNG' : 'JPEG', mL, y - 4, wL, wL * dim.h / dim.w);
+        xt = mL + wL + 5;
+      } catch {}
+    }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...negro); doc.text('GH Aberturas S.R.L.', xt, y + 2);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...gris);
-    doc.text('Aberturas de PVC · Av. Brig. Gral. Juan Manuel de Rosas 29', mL, y + 7); doc.text('11 6980 6906 · gherrou@aberturasgh.com.ar', mL, y + 11);
+    doc.text('Aberturas de PVC · Av. Brig. Gral. Juan Manuel de Rosas 29', xt, y + 7); doc.text('11 6980 6906 · gherrou@aberturasgh.com.ar', xt, y + 11);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...verde);
     doc.text(interno ? 'PRESUPUESTO · USO INTERNO' : 'PRESUPUESTO', W - mR, y + 1, { align: 'right' });
     doc.setFontSize(10); doc.setTextColor(...negro); doc.text('N° ' + num + (fecha ? '   ·   ' + fecha : ''), W - mR, y + 7, { align: 'right' });
@@ -732,7 +753,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     const cond = doc.splitTextToSize('Forma de pago: 60% de adelanto y 40% contra entrega y colocación. Plazo de entrega: color blanco 60/80 días, colores 80/110 días. Precio en dólares tipo vendedor del Banco Nación del día de pago. En caso de ser necesario, el izaje se cotiza aparte.', ancho);
     doc.text(cond, mL, y);
     const pags = doc.getNumberOfPages();
-    for (let i = 1; i <= pags; i++) { doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(...gris); doc.text(`GH Aberturas · Presupuesto N° ${num} · página ${i} de ${pags}`, W / 2, 291, { align: 'center' }) }
+    for (let i = 1; i <= pags; i++) { doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(...gris); doc.text(`GH Aberturas · Presupuesto N° ${num} · página ${i} de ${pags}`, W / 2, 291, { align: 'center' }); doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(...verde); doc.text('VIVIR MEJOR ES POSIBLE', W / 2, 286.5, { align: 'center' }); doc.setFont('helvetica', 'normal') }
     const nombre = `Presupuesto ${num} ${(pres.cliente && pres.cliente.nombre || '').replace(/[^\wÁÉÍÓÚáéíóúÑñ .-]/g, '').trim()}${interno ? ' (interno)' : ''}.pdf`.replace(/\s+/g, ' ');
     const blob = doc.output('blob');
     const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
@@ -744,6 +765,49 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     }
   }
   const presActual = () => ({ numero: S.numero, cliente: S.cliente, items: S.items, params: S.params });
+
+  // ----- logo de la empresa -----
+  // Se guarda en la base compartida (config/empresa) o, en el archivo suelto, en este navegador.
+  const Empresa = { logo: null, ref: null };
+  function medirImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res({ w: i.naturalWidth || 1, h: i.naturalHeight || 1 }); i.onerror = rej; i.src = src }) }
+  function mostrarLogo() {
+    $('logo-prev').innerHTML = Empresa.logo ? `<img src="${Empresa.logo}" alt="Logo" style="max-width:100%;max-height:100%">` : '<small style="color:#5d6b67">Sin logo</small>';
+    $('logo-quitar').hidden = !Empresa.logo;
+  }
+  async function initEmpresa() {
+    const db = window.claude && window.claude.use ? await window.claude.use('db') : null;
+    if (db) {
+      Empresa.ref = db.doc('config/empresa');
+      Empresa.ref.onSnapshot(d => { Empresa.logo = d.exists ? (d.data().logo || null) : null; mostrarLogo() }, () => {});
+    } else { try { Empresa.logo = localStorage.getItem('gh-logo') } catch {} mostrarLogo() }
+  }
+  async function guardarLogo(dataUrl) {
+    Empresa.logo = dataUrl; mostrarLogo();
+    try {
+      if (Empresa.ref) await Empresa.ref.set({ logo: dataUrl });
+      else if (dataUrl) localStorage.setItem('gh-logo', dataUrl); else localStorage.removeItem('gh-logo');
+      toast(dataUrl ? 'Logo guardado' : 'Logo quitado');
+    } catch (e) { toast('No se pudo guardar el logo (' + (e && e.code || 'error') + ')') }
+  }
+  $('logo-file').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, 600 / img.naturalWidth, 300 / img.naturalHeight), c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let url = c.toDataURL('image/png');
+        if (url.length > 180000) { const x = c.getContext('2d'); const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height; const y2 = c2.getContext('2d'); y2.fillStyle = '#fff'; y2.fillRect(0, 0, c2.width, c2.height); y2.drawImage(c, 0, 0); url = c2.toDataURL('image/jpeg', 0.9) }
+        guardarLogo(url); e.target.value = '';
+      };
+      img.onerror = () => toast('No se pudo leer esa imagen');
+      img.src = r.result;
+    };
+    r.readAsDataURL(f);
+  });
+  $('logo-quitar').addEventListener('click', () => guardarLogo(null));
 
   // ----- eventos -----
   ['f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-dto', 'f-iva'].forEach(id => $(id).addEventListener('input', () => { if (id === 'f-ancho' || id === 'f-alto') renderSecs(); preview() }));
@@ -806,6 +870,6 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   const first = S.items.find(i => i.id === S.sel);
   if (first) cargarForm(Object.assign({}, first)); else renderSecs();
   $('f-cod').value = sugerirCodigo();
-  preview(); render(); validar(); marcarCambios(); Archivo.init();
+  preview(); render(); validar(); marcarCambios(); Archivo.init(); initEmpresa();
 })();
 </script>
