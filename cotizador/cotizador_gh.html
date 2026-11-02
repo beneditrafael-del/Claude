@@ -81,8 +81,8 @@ td.num, th.num { text-align: right; white-space: nowrap }
 tr.sel td { background: var(--accent-soft) }
 .desc { font-size: .84rem; color: var(--muted) }
 tr.sin-borde td { border-bottom: 0 }
-fieldset.dtos { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px 12px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0 }
-fieldset.dtos legend { font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 4px }
+fieldset.dtos, fieldset.secs { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px 12px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0 }
+fieldset.dtos legend, fieldset.secs legend { font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 4px }
 .grupo { grid-column: 1 / -1; font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-top: 6px }
 
 .totales { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-size: .95rem }
@@ -102,6 +102,11 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
 .e-ok { color: var(--good) } .e-mid { color: var(--warn) } .e-bad { color: var(--bad) }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 4px; font-size: .9rem }
 @media (prefers-reduced-motion: no-preference) { tr { transition: background .15s } }
+.sec { border: 1px dashed var(--line); border-radius: 4px; padding: 10px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: end }
+.sec .tit { grid-column: 1 / -1; font: 600 .8rem var(--f-display); text-transform: uppercase; letter-spacing: .06em; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap }
+.sec .checks { grid-column: 1 / -1; display: flex; gap: 6px 16px; flex-wrap: wrap }
+@media (max-width: 520px) { .sec { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+.form .secs { grid-column: 1 / -1 }
 </style>
 
 <div class="wrap">
@@ -121,23 +126,31 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     <section class="card" aria-labelledby="h-nueva">
       <div class="cardhead"><h2 id="h-nueva">Abertura</h2><span class="chip" id="modo-chip">Nueva</span></div>
       <form class="form" id="f-item" autocomplete="off">
-        <label class="span2">Tipología<select id="f-tip"></select></label>
         <label>Modelo<input id="f-cod" placeholder="V1"></label>
         <label>Uds.<input id="f-cant" type="number" min="1" step="1" value="1"></label>
-        <label>Ancho (mm)<input id="f-ancho" type="number" min="300" step="5" value="1500"></label>
-        <label>Alto (mm)<input id="f-alto" type="number" min="300" step="5" value="1100"></label>
+        <label>Ancho total (mm)<input id="f-ancho" type="number" min="300" step="5" value="1500"></label>
+        <label>Alto total (mm)<input id="f-alto" type="number" min="300" step="5" value="1100"></label>
         <label class="span2">Color<select id="f-color"></select></label>
         <label class="span2">Vidrio<select id="f-vidrio"></select></label>
         <label>Dto. renglón %<input id="f-dto" type="number" min="0" max="100" step="0.5" value="0"></label>
         <label>Factura<select id="f-iva"><option value="con">Con IVA</option><option value="sin">Sin IVA</option></select></label>
-        <label class="check span2" id="l-mosq"><input type="checkbox" id="f-mosq"> Con mosquitero</label>
+        <label class="span2">Mezclar tipologías<select id="f-div">
+          <option value="no">No, una sola tipología</option>
+          <option value="h">Sí, con travesaño (una arriba de otra)</option>
+          <option value="v">Sí, con parante (una al lado de otra)</option>
+        </select></label>
+        <fieldset class="secs span4">
+          <legend id="secs-leyenda">Tipología</legend>
+          <label id="l-nsec" hidden>Cantidad de secciones<select id="f-nsec"><option>2</option><option>3</option><option>4</option></select></label>
+          <div id="secs" style="display:flex;flex-direction:column;gap:8px"></div>
+        </fieldset>
         <div class="row span4">
           <button type="submit" class="prim" id="b-guardar">Agregar al presupuesto</button>
           <button type="button" id="b-cancelar" hidden>Cancelar edición</button>
         </div>
       </form>
       <div class="plano">
-        <svg id="dibujo" viewBox="0 0 300 260" role="img" aria-label="Plano de la abertura"></svg>
+        <svg id="dibujo" viewBox="0 0 300 270" role="img" aria-label="Plano de la abertura"></svg>
         <div>
           <div class="row" style="justify-content:space-between"><strong>Precio por unidad</strong><span id="p-chip"></span></div>
           <div class="desg" id="p-desg"></div>
@@ -177,7 +190,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       <div class="row">
         <button type="button" class="prim" id="b-copiar">Copiar presupuesto</button>
         <button type="button" id="b-nuevo">Presupuesto nuevo</button>
-        <span id="confirm-nuevo" hidden class="row"><span class="muted">¿Borrar todo?</span><button type="button" id="b-si">Sí, borrar</button><button type="button" id="b-no">No</button></span>
+        <span id="confirm-nuevo" hidden><span class="muted">¿Borrar todo?</span> <button type="button" id="b-si">Sí, borrar</button> <button type="button" id="b-no">No</button></span>
       </div>
     </section>
   </div>
@@ -191,7 +204,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
         <tbody id="h-res"></tbody>
       </table></div>
       <div class="tabla"><table>
-        <thead><tr><th>Código</th><th>Artículo</th><th class="num">Uds.</th><th class="num">Corte</th><th>Detalle</th><th class="num">Unitario</th><th class="num">T-Comp</th></tr></thead>
+        <thead><tr><th>Secc.</th><th>Código</th><th>Artículo</th><th class="num">Uds.</th><th class="num">Corte</th><th>Detalle</th><th class="num">Unitario</th><th class="num">T-Comp</th></tr></thead>
         <tbody id="h-det"></tbody>
       </table></div>
     </div>
@@ -220,24 +233,22 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
 
 <script>
 // Motor de cálculo del cotizador GH.
-//  - hetmo(): reproduce el "Análisis de importes" de Hetmo a partir del despiece de cada ficha técnica.
-//    Exacto (al centavo) para Prime 74 2 guías, DC 66-85 1 hoja y paño fijo DC, verificado contra
-//    capturas de Hetmo. El resto de las tipologías se arma por analogía y se marca como aproximado.
-//  - precioWMaker(): precio de lista calibrado con presupuestos reales de WMaker (referencia).
+//  - Una abertura tiene un marco total (ancho × alto) que se puede dividir con parantes (verticales)
+//    o travesaños (horizontales) en secciones. Cada sección tiene su tipo, hojas, mano y mosquitero.
+//  - hetmo(): reproduce el "Análisis de importes" de Hetmo a partir del despiece.
+//    Exacto (al centavo) para una sola sección de: corrediza Prime 74 2 hojas, de abrir DC 66-85 1 hoja
+//    y paño fijo DC, verificado contra capturas de Hetmo. El resto se arma por analogía (aproximado).
 (function (root) {
   'use strict';
 
-  const TIPOLOGIAS = {
-    corr2:  { nombre: 'Corrediza Prime 74, 2 hojas',  prefijo: 'V',  hojas: 2, desc: 'Ventana corrediza linea Prime 74', ficha: '175 LINEA PRIME 74 - 2 GUIAS', exacto: true, mosq: true },
-    abrir1: { nombre: 'De abrir DC 66-85, 1 hoja',    prefijo: 'V',  hojas: 1, desc: 'Ventana de abrir linea DC 66-85', ficha: '108 DC 66-85', exacto: true, mosq: true },
-    pano:   { nombre: 'Paño fijo DC',                 prefijo: 'V',  hojas: 0, desc: 'Paño fijo linea DC 58-66', ficha: 'Paño fijo DC 58-66', exacto: true },
-    corr3:  { nombre: 'Corrediza Prime 74, 3 hojas',  prefijo: 'V',  hojas: 3, desc: 'Ventana corrediza linea Prime 74', ficha: '176 LINEA PRIME 74 - 3 GUIAS', mosq: true },
-    abrir2: { nombre: 'De abrir DC 66-85, 2 hojas',   prefijo: 'V',  hojas: 2, desc: 'Ventana de abrir linea DC 66-85', ficha: '108 DC 66-85', mosq: true },
-    osc1:   { nombre: 'Oscilobatiente DC, 1 hoja',    prefijo: 'V',  hojas: 1, desc: 'Ventana oscilobatiente linea DC 66-85', ficha: '108 DC 66-85', mosq: true },
-    osc2:   { nombre: 'Oscilobatiente DC, 2 hojas',   prefijo: 'V',  hojas: 2, desc: 'Ventana oscilobatiente linea DC 66-85', ficha: '108 DC 66-85', mosq: true },
-    proy:   { nombre: 'Proyectante DC',               prefijo: 'V',  hojas: 1, desc: 'Ventana proyectante linea DC 66-85', ficha: 'DC 66-85', mosq: true },
-    puerta1:{ nombre: 'Puerta DC 100, 1 hoja',        prefijo: 'P',  hojas: 1, desc: 'Puerta de rebatir linea DC 100', ficha: '109 DC 66-100' },
-    puerta2:{ nombre: 'Puerta DC 100, 2 hojas',       prefijo: 'P',  hojas: 2, desc: 'Puerta de rebatir linea DC 100', ficha: '109 DC 66-100' },
+  const TIPOS = {
+    abrir:     { nombre: 'De abrir',        hojas: [1, 2, 3], ficha: '108 DC 66-85', mosq: 'fijo', desc: 'de abrir' },
+    oscilo:    { nombre: 'Oscilobatiente',  hojas: [1, 2],    ficha: '108 DC 66-85', mosq: 'fijo', desc: 'oscilobatiente' },
+    corrediza: { nombre: 'Corrediza',       hojas: [2, 3, 4], ficha: '175 LINEA PRIME 74', mosq: 'corredizo', desc: 'corrediza' },
+    pano:      { nombre: 'Paño fijo',       hojas: [0],       ficha: 'Paño fijo DC 58-66', mosq: 'fijo', desc: 'paño fijo' },
+    proy:      { nombre: 'Proyectante',     hojas: [1],       ficha: 'DC 66-85', mosq: 'fijo', desc: 'proyectante' },
+    band:      { nombre: 'Banderola',       hojas: [1],       ficha: 'DC 66-85', mosq: 'fijo', desc: 'banderola' },
+    puerta:    { nombre: 'Puerta DC 100',   hojas: [1, 2],    ficha: '109 DC 66-100', mosq: null, desc: 'puerta de rebatir' },
   };
 
   const COLORES = {
@@ -331,6 +342,10 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     'GU-PAS':    ['PASADORES HOJA PASIVA (aprox.)', 'herraje', 9.5, null, 0],
     'CERR-MP':   ['CERRADURA MULTIPUNTO 25/92', 'herraje', 35.17, null, 0],
     'BIS-PTA':   ['BISAGRA PUERTA (aprox.)', 'herraje', 8.0, null, 0],
+    'GU-BAND':   ['COMPASES BANDEROLA UNI-JET (aprox.)', 'herraje', 14.8, null, 0],
+    '111251000': ['POSTE DC 58', 'perfiles', 6.54, { golden: 11.18, bic_grafito: 7.52 }, 1],
+    '145070000': ['KIT ESCUADRA POSTE DC', 'accesorios', 2.66, null, 0],
+    '913091000': ['PERFIL ACOPLE 20X3 MM', 'perfiles', 0.07, { golden: 1.2, turner: 1.57, negro: 1.38 }, 1],
   };
   const COLOR_FALLBACK = { blanco: 1, golden: 1.70, nogal: 1.70, grafito: 1.70, negro: 1.82, turner: 1.95, bic_golden: 1.38, bic_grafito: 1.38, bic_negro: 1.45 };
 
@@ -341,173 +356,204 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
 
   const esColor = c => c && c !== 'blanco';
 
-  // ---------- Fichas técnicas ----------
-  // Cada pieza: [código, uds, largo mm (0 si es por unidad), detalle]
-  function ficha(tip, W, H, color) {
-    const L = [], vid = [];
+  // ---------- Secciones ----------
+  // Devuelve las secciones con su ancho/alto real y qué hay en cada lado:
+  // 'ext' = borde exterior (marco + tapajuntas), 'poste' = parante/travesaño DC compartido (sin marco),
+  // 'acople' = marco propio unido a la sección vecina (cuando hay una corrediza de por medio).
+  function secciones(item) {
+    const S = (item.secciones && item.secciones.length ? item.secciones : [{ tipo: 'corrediza', hojas: 2 }]).map(s => Object.assign({}, s));
+    const div = S.length > 1 ? (item.division === 'h' ? 'h' : 'v') : 'no';
+    const total = div === 'h' ? item.alto : item.ancho;
+    let usado = 0;
+    S.forEach((s, i) => {
+      const m = i === S.length - 1 ? total - usado : Math.max(200, Math.round(+s.medida || total / S.length));
+      s.medida = m; usado += m;
+      s.w = div === 'v' ? m : item.ancho; s.h = div === 'h' ? m : item.alto;
+      s.lados = { t: 'ext', b: 'ext', l: 'ext', r: 'ext' };
+    });
+    for (let i = 0; i < S.length - 1; i++) {
+      const a = S[i], b = S[i + 1];
+      const union = a.tipo === 'corrediza' || b.tipo === 'corrediza' ? 'acople' : 'poste';
+      if (div === 'v') { a.lados.r = union; b.lados.l = union } else { a.lados.b = union; b.lados.t = union }
+    }
+    return { div, secciones: S };
+  }
+
+  // Cada pieza: { cod, uds, largo (mm, 0 si es por unidad), det }
+  function ficha(s, color) {
+    const L = [], vid = [], W = s.w, H = s.h, ld = s.lados;
     const p = (cod, uds, largo, det) => { if (uds > 0) L.push({ cod, uds, largo, det: det || '' }) };
     const col = esColor(color);
-    // tornillos TR-16 por cada tramo de refuerzo
-    let tr = 0; const trs = (largo, paso) => { tr += Math.ceil(largo / paso) };
+    let tr = 0; const trs = (largo, paso) => { tr += Math.ceil(Math.max(largo, 1) / paso) };
+    const lados = [['t', W], ['b', W], ['l', H], ['r', H]];
     const remate = () => {
-      p('913051000', 2, W + 70, 'tapajuntas horizontal'); p('913051000', 2, H + 70, 'tapajuntas vertical');
       const clip = x => Math.max(3, Math.floor(x / 250));
-      p('945675000', 2 * clip(W) + 2 * clip(H), 0); p('945685000', 4, 0);
-      p('VR-T-01', 2 * Math.round((W + 70) / 350) + 2 * Math.round((H + 70) / 350), 0);
+      let clips = 0, vrt = 0;
+      for (const [k, x] of lados) if (ld[k] === 'ext') { p('913051000', 1, x + 70, 'tapajuntas'); clips += clip(x); vrt += Math.round((x + 70) / 350) }
+      const esq = [['t', 'l'], ['t', 'r'], ['b', 'l'], ['b', 'r']].filter(([a, b]) => ld[a] === 'ext' && ld[b] === 'ext').length;
+      p('945675000', clips, 0); p('945685000', esq, 0); p('VR-T-01', vrt, 0);
     };
-    if (tip === 'corr2' || tip === 'corr3') {
-      const n = tip === 'corr3' ? 3 : 2;
+    const tipo = s.tipo, n = s.hojas || 0;
+    if (tipo === 'corrediza') {
       const hw = Math.round(W / n) - 5, hh = H - 90;
+      const marco = n === 3 ? '112601000' : '112501000';
       p('110331000', 2 * n, hw, 'hoja horizontal'); p('110331000', 2 * n, hh, 'hoja vertical');
-      if (n === 2) { p('112501000', 2, W + 6, 'marco'); p('112501000', 2, H + 6, 'marco') }
-      else { p('112601000', 2, W + 6, 'marco 3 guías'); p('112601000', 2, H + 6, 'marco 3 guías') }
+      for (const [k, x] of lados) p(marco, 1, x + 6, 'marco');
       p('113341000', 2 * (n - 1), H - 98); p('113411000', 2 * (n - 1), H - 98); p('113451000', 2 * (n - 1), H - 98);
-      p('144410300', n === 2 ? 2 : 3, W - 112, 'guía');
+      p('144410300', n === 3 ? 3 : 2, W - 112, 'guía');
       const gw = Math.round(W / n) - 131, gh = H - 216;
       for (let i = 0; i < n; i++) { vid.push([gw, gh]); p('410061000', 2, gw + 8); p('410061000', 2, gh + 8) }
       const pasoH = col ? 170 : 250, pasoM = col ? 200 : 300;
       p('920100015', 2 * n, hw - 130, 'refuerzo hoja'); p('920100015', 2 * n, hh - 130, 'refuerzo hoja');
       for (let i = 0; i < 2 * n; i++) { trs(hw - 130, pasoH); trs(hh - 130, pasoH) }
-      p('920220015', 2, W - 88, 'refuerzo marco'); p('920220015', 2, H - 88, 'refuerzo marco');
-      for (let i = 0; i < 2; i++) { trs(W - 88, pasoM); trs(H - 88, pasoM) }
-      p('932003300', 2 * (n - 1), 0, (H - 96) + ' mm'); L[L.length - 1].cantM = (H - 96) / 1000;
+      for (const [k, x] of lados) { p('920220015', 1, x - 88, 'refuerzo marco'); trs(x - 88, pasoM) }
+      p('932003300', 2 * (n - 1), 0, (H - 96) + ' mm'); if (n > 1) L[L.length - 1].cantM = (H - 96) / 1000;
       p('145040000', 4 * n, 0); p('145101000', 2 * (n - 1), 0); p('145231000', 2 * n, 0);
       p('945131000', 2, 0); p('945160000', 4 * n, 0);
       remate();
-      const cr = rango(CREMONA_INLINE, hh - 100);
-      p('GU-C-906', n - 1 + (n === 3 ? 0 : 1), 0); p('GU-E-138', 2 * n, 0); p('GU-E-181', n, 0);
-      L.push({ cod: 'CREMONA-IL', uds: n, largo: 0, det: cr[2], precio: cr[1] });
-      p('GU-L-250', 2 * n, 0); p('GU-L-252', 2 * n, 0);
-    } else if (tip === 'pano') {
-      p('112241000', 2, W + 6, 'marco'); p('112241000', 2, H + 6, 'marco');
-      p('145060000', 4, 0);
-      const gw = W - 104, gh = H - 104; vid.push([gw, gh]);
-      p('410181000', 2, gw + 8); p('410181000', 2, gh + 8);
-      p('920470013', 1, W - 116, 'refuerzo marco'); p('920480013', 1, W - 116, 'refuerzo marco'); p('920480013', 2, H - 116, 'refuerzo marco');
-      for (let i = 0; i < 2; i++) { trs(W - 116, 250); trs(H - 116, 250) }
-      p('945131000', 2, 0); p('945160000', 4, 0);
-      remate();
+      const cr = rango(CREMONA_INLINE, hh - 100), moviles = n === 3 ? 2 : n;
+      p('GU-C-906', moviles, 0); p('GU-E-138', 2 * n, 0); p('GU-E-181', n, 0);
+      L.push({ cod: 'CREMONA-IL', uds: moviles, largo: 0, det: cr[2], precio: cr[1] });
+      p('GU-L-250', 2 * n, 0); p('GU-L-252', 2 * moviles, 0);
     } else {
-      // DC 66-85 (abrir / oscilo / proyectante) y DC 100 (puerta)
-      const n = TIPOLOGIAS[tip].hojas, puerta = tip.startsWith('puerta');
-      const hw = n === 1 ? W - 74 : Math.round(W / 2) - 30, hh = H - 74;
-      p('112241000', 2, W + 6, 'marco'); p('112241000', 2, H + 6, 'marco');
-      p(puerta ? '110211000' : '110201000', 2 * n, hw, 'hoja horizontal'); p(puerta ? '110211000' : '110201000', 2 * n, hh, 'hoja vertical');
-      if (n === 2) p('111231000', 1, hh, 'batiente central');
-      p('145060000', 4 * n, 0);
-      const gw = hw - 148, gh = hh - 148 - (puerta ? 100 : 0);
-      for (let i = 0; i < n; i++) { vid.push([gw, gh]); p('410181000', 2, gw + 8); p('410181000', 2, gh + 8) }
-      p('913151000', n, H - 120);
-      p(puerta ? '920070025' : '920090015', 2 * n, hw - 160, 'refuerzo hoja'); p(puerta ? '920070025' : '920090015', 2 * n, hh - 160, 'refuerzo hoja');
-      for (let i = 0; i < 2 * n; i++) { trs(hw - 160, 250); trs(hh - 160, 250) }
-      p('920470013', 1, W - 116, 'refuerzo marco'); p('920480013', 1, W - 116, 'refuerzo marco'); p('920480013', 2, H - 116, 'refuerzo marco');
-      for (let i = 0; i < 2; i++) { trs(W - 116, 250); trs(H - 116, 250) }
-      p('945131000', 2, 0); p('945160000', 4 * n, 0);
-      remate();
-      if (puerta) {
-        p('BIS-PTA', 3 * n, 0); p('CERR-MP', 1, 0); p('GU-C-906', 1, 0); if (n === 2) p('GU-PAS', 1, 0);
+      // Marco DC: solo en los lados exteriores o acoplados (en los lados con poste no lleva marco).
+      const conMarco = k => ld[k] !== 'poste';
+      for (const [k, x] of lados) if (conMarco(k)) p('112241000', 1, x + 6, 'marco');
+      const refM = { t: '920470013', b: '920480013', l: '920480013', r: '920480013' };
+      for (const [k, x] of lados) if (conMarco(k)) { p(refM[k], 1, x - 116, 'refuerzo marco'); trs(x - 116, 250) }
+      if (tipo === 'pano') {
+        p('145060000', 4, 0);
+        const gw = W - 104, gh = H - 104; vid.push([gw, gh]);
+        p('410181000', 2, gw + 8); p('410181000', 2, gh + 8);
+        p('945131000', 2, 0); p('945160000', 4, 0);
       } else {
-        ['GU-6-342', 'GU-6-360', 'GU-6-361', 'GU-6-368', 'GU-6-391', 'GU-9-408', 'GU-9-488', 'GU-K-186'].forEach(c => p(c, n, 0));
-        p('GU-9-447', 2 * n, 0); p('GU-C-906', 1, 0); p('GU-L-252', 2, 0);
-        const cr = rango(CREMONA_CANTO, hh - 100);
-        L.push({ cod: 'CREMONA-CA', uds: 1, largo: 0, det: cr[2], precio: cr[1] });
-        if (n === 2) p('GU-PAS', 1, 0);
-        if (tip.startsWith('osc')) p('GU-OSC', n, 0);
-        if (tip === 'proy') p('GU-PROY', 1, 0);
+        const puerta = tipo === 'puerta';
+        const hw = n === 1 ? W - 74 : Math.round(W / n) - 30, hh = H - 74;
+        const hoja = puerta ? '110211000' : '110201000';
+        p(hoja, 2 * n, hw, 'hoja horizontal'); p(hoja, 2 * n, hh, 'hoja vertical');
+        if (n > 1) p('111231000', n - 1, hh, 'batiente central');
+        p('145060000', 4 * n, 0);
+        const gw = hw - 148, gh = hh - 148 - (puerta ? 100 : 0);
+        for (let i = 0; i < n; i++) { vid.push([gw, gh]); p('410181000', 2, gw + 8); p('410181000', 2, gh + 8) }
+        p('913151000', n, (tipo === 'proy' || tipo === 'band' ? W : H) - 120);
+        const ref = puerta ? '920070025' : '920090015';
+        p(ref, 2 * n, hw - 160, 'refuerzo hoja'); p(ref, 2 * n, hh - 160, 'refuerzo hoja');
+        for (let i = 0; i < 2 * n; i++) { trs(hw - 160, 250); trs(hh - 160, 250) }
+        p('945131000', 2, 0); p('945160000', 4 * n, 0);
+        if (puerta) {
+          p('BIS-PTA', 3 * n, 0); p('CERR-MP', 1, 0); p('GU-C-906', 1, 0); if (n > 1) p('GU-PAS', n - 1, 0);
+        } else {
+          ['GU-6-342', 'GU-6-360', 'GU-6-361', 'GU-6-368', 'GU-6-391', 'GU-9-408', 'GU-9-488', 'GU-K-186'].forEach(c => p(c, n, 0));
+          p('GU-9-447', 2 * n, 0); p('GU-C-906', 1, 0); p('GU-L-252', 2, 0);
+          const cr = rango(CREMONA_CANTO, (tipo === 'proy' || tipo === 'band' ? hw : hh) - 100);
+          L.push({ cod: 'CREMONA-CA', uds: 1, largo: 0, det: cr[2], precio: cr[1] });
+          if (n > 1) p('GU-PAS', n - 1, 0);
+          const osc = tipo === 'oscilo' ? n : (s.osc || []).slice(0, n).filter(Boolean).length;
+          p('GU-OSC', osc, 0);
+          if (tipo === 'proy') p('GU-PROY', 1, 0);
+          if (tipo === 'band') p('GU-BAND', 1, 0);
+        }
       }
+      remate();
     }
     p('TR-16', tr, 0);
     return { piezas: L, vidrios: vid };
   }
 
-  // Fabricación (USD de compra): calibrada con las capturas; escala con el perímetro.
-  const FABRICACION = { corr2: [96.238, 5.2], corr3: [96.238 * 1.4, 5.2], pano: [39.13, 4.0], abrir1: [70.946, 3.2], abrir2: [70.946 * 1.7, 3.2], osc1: [70.946 * 1.1, 3.2], osc2: [70.946 * 1.85, 3.2], proy: [70.946, 3.2], puerta1: [70.946 * 1.3, 3.2], puerta2: [70.946 * 2.1, 3.2] };
+  // Fabricación (USD de compra) calibrada con las capturas; la mitad fija y la mitad escala con el perímetro.
+  function fabricacion(s) {
+    const per = 2 * (s.w + s.h) / 1000, n = s.hojas || 0;
+    let base, ref;
+    if (s.tipo === 'corrediza') { base = 96.238 * (1 + 0.4 * (n - 2)); ref = 5.2 }
+    else if (s.tipo === 'pano') { base = 39.13; ref = 4.0 }
+    else {
+      base = 70.946 * (n === 1 ? 1 : n === 2 ? 1.7 : 2.4); ref = 3.2;
+      if (s.tipo === 'puerta') base *= 1.3;
+      const osc = s.tipo === 'oscilo' ? n : (s.osc || []).slice(0, n).filter(Boolean).length;
+      base += 7 * osc;
+    }
+    return base * (0.5 + 0.5 * per / ref);
+  }
   const ACRISTALAMIENTO = 2.9165; // por vidrio
+
+  function mosquitero(s, color) {
+    if (!s.mosq) return 0;
+    const t = TIPOS[s.tipo]; if (!t || !t.mosq) return 0;
+    const W = s.w / 1000, H = s.h / 1000, fc = esColor(color) ? 1.27 : 1;
+    if (t.mosq === 'corredizo') { const n = s.hojas || 2, nm = n === 3 ? 2 : Math.max(1, Math.floor(n / 2)); return nm * (45.4 + 120.4 * (W / n) * H) * fc }
+    return (40 + 70 * W * H) * fc;
+  }
+
+  function esExacto(item) {
+    const { secciones: S } = secciones(item);
+    if (S.length !== 1) return false;
+    const s = S[0];
+    return (s.tipo === 'corrediza' && s.hojas === 2) || s.tipo === 'pano' || (s.tipo === 'abrir' && s.hojas === 1 && !(s.osc || [])[0]);
+  }
 
   function hetmo(item, P) {
     P = Object.assign({}, PARAMETROS_BASE, P || {});
-    const W = item.ancho, H = item.alto, color = item.color || 'blanco';
-    const { piezas, vidrios } = ficha(item.tipologia, W, H, color);
+    const color = item.color || 'blanco';
+    const { div, secciones: S } = secciones(item);
     const G = { perfiles: 0, refuerzos: 0, juntas: 0, tornilleria: 0, accesorios: 0, tapajuntas: 0, vidrios: 0, herraje: 0, fabricacion: 0, acristalamiento: 0 };
-    const V1 = Object.assign({}, G);
-    const det = [];
-    for (const pz of piezas) {
+    const V1 = Object.assign({}, G), det = [];
+    const vid = VIDRIOS[item.vidrio] || VIDRIOS.dvh, usdM2 = vid.ars / P.tipoCambio;
+    const agregar = (pz, seccion) => {
       let desc, grupo, precio, lineal;
       if (pz.precio != null) { desc = 'CREMONA ' + pz.det; grupo = 'herraje'; precio = pz.precio * P.recargoHerrajeGU; lineal = 0 }
       else {
-        const a = ART[pz.cod]; desc = a[0]; grupo = a[1]; lineal = a[4];
-        precio = a[2];
+        const a = ART[pz.cod]; desc = a[0]; grupo = a[1]; lineal = a[4]; precio = a[2];
         if (esColor(color) && grupo !== 'refuerzos' && a[3] !== null) precio = (a[3] && a[3][color]) || a[2] * COLOR_FALLBACK[color];
       }
       const cant = pz.largo ? pz.uds * pz.largo / 1000 : pz.cantM ? pz.uds * pz.cantM : pz.uds;
       const imp = cant * precio;
       G[grupo] += imp; V1[grupo] += imp * (lineal ? P.mermaLineal : 1);
-      det.push({ cod: pz.cod, desc, grupo, uds: pz.uds, largo: pz.largo, cant, unidad: pz.largo || pz.cantM ? 'm' : 'u', det: pz.det, precio, importe: imp });
-    }
-    const vid = VIDRIOS[item.vidrio] || VIDRIOS.dvh;
-    const usdM2 = vid.ars / P.tipoCambio;
-    for (const [gw, gh] of vidrios) {
-      const a = Math.max(0.5, Math.ceil(gw / 10) * Math.ceil(gh / 10) / 10000);
-      const imp = a * usdM2; G.vidrios += imp; V1.vidrios += imp;
-      det.push({ cod: vid.cod, desc: vid.nombre, grupo: 'vidrios', uds: 1, cant: a, unidad: 'm²', det: `${gw} × ${gh}`, precio: usdM2, importe: imp });
-      if (vid.camara) {
-        const per = 2 * (gw + gh) / 1000, pc = CAMARAS[vid.camara] / P.tipoCambio, ic = per * pc;
-        G.vidrios += ic; V1.vidrios += ic * P.mermaLineal;
-        det.push({ cod: vid.camara, desc: 'Separador cámara ' + vid.camara, grupo: 'vidrios', uds: 1, cant: per, unidad: 'm', det: 'perímetro del vidrio', precio: pc, importe: ic });
+      det.push({ seccion, cod: pz.cod, desc, grupo, uds: pz.uds, largo: pz.largo, cant, unidad: pz.largo || pz.cantM ? 'm' : 'u', det: pz.det, precio, importe: imp });
+    };
+    let mosq = 0;
+    S.forEach((s, i) => {
+      const nombre = S.length > 1 ? `S${i + 1}` : '';
+      const { piezas, vidrios } = ficha(s, color);
+      for (const pz of piezas) agregar(pz, nombre);
+      for (const [gw, gh] of vidrios) {
+        const a = Math.max(0.5, Math.ceil(gw / 10) * Math.ceil(gh / 10) / 10000), imp = a * usdM2;
+        G.vidrios += imp; V1.vidrios += imp;
+        det.push({ seccion: nombre, cod: vid.cod, desc: vid.nombre, grupo: 'vidrios', uds: 1, cant: a, unidad: 'm²', det: `${gw} × ${gh}`, precio: usdM2, importe: imp });
+        if (vid.camara) {
+          const per = 2 * (gw + gh) / 1000, pc = CAMARAS[vid.camara] / P.tipoCambio, ic = per * pc;
+          G.vidrios += ic; V1.vidrios += ic * P.mermaLineal;
+          det.push({ seccion: nombre, cod: vid.camara, desc: 'Separador cámara ' + vid.camara, grupo: 'vidrios', uds: 1, cant: per, unidad: 'm', det: 'perímetro del vidrio', precio: pc, importe: ic });
+        }
+      }
+      const fb = fabricacion(s) * (esColor(color) ? 1.0173 : 1);
+      G.fabricacion += fb; V1.fabricacion += fb;
+      const ac = ACRISTALAMIENTO * vidrios.length; G.acristalamiento += ac; V1.acristalamiento += ac;
+      mosq += mosquitero(s, color);
+    });
+    // Uniones entre secciones: poste DC compartido o acople entre marcos.
+    for (let i = 0; i < S.length - 1; i++) {
+      const a = S[i], largo = div === 'v' ? item.alto : item.ancho;
+      const union = div === 'v' ? a.lados.r : a.lados.b, nombre = `S${i + 1}/S${i + 2}`;
+      if (union === 'poste') {
+        agregar({ cod: '111251000', uds: 1, largo: largo - 60, det: div === 'v' ? 'parante' : 'travesaño' }, nombre);
+        agregar({ cod: '920480013', uds: 1, largo: largo - 116, det: 'refuerzo poste' }, nombre);
+        agregar({ cod: '145070000', uds: 2, largo: 0 }, nombre);
+        agregar({ cod: 'TR-16', uds: Math.ceil((largo - 116) / 250), largo: 0 }, nombre);
+        G.fabricacion += 12; V1.fabricacion += 12;
+      } else {
+        agregar({ cod: '913091000', uds: 1, largo, det: 'acople entre marcos' }, nombre);
+        agregar({ cod: 'TR-16', uds: Math.ceil(largo / 300), largo: 0 }, nombre);
+        G.fabricacion += 6; V1.fabricacion += 6;
       }
     }
-    const per = 2 * (W + H) / 1000;
-    const [fb, pref] = FABRICACION[item.tipologia];
-    G.fabricacion = fb * (0.5 + 0.5 * per / pref) * (esColor(color) ? 1.0173 : 1);
-    G.acristalamiento = ACRISTALAMIENTO * vidrios.length;
-    V1.fabricacion = G.fabricacion; V1.acristalamiento = G.acristalamiento;
+    const per = 2 * (item.ancho + item.alto) / 1000;
     const montaje = P.montajeMl * per;
     const compra = Object.values(G).reduce((s, x) => s + x, 0);
     const venta1 = Object.values(V1).reduce((s, x) => s + x, 0) + montaje;
     const mg = 1 + P.margen / 100;
     const carpinteria = (V1.perfiles + V1.refuerzos + V1.juntas + V1.tornilleria + V1.accesorios + V1.tapajuntas + V1.herraje + V1.fabricacion) * mg;
-    const vidriosV = (V1.vidrios + V1.acristalamiento) * mg;
-    const montajeV = montaje * mg;
     return { detalle: det, compra: G, venta1Grupos: V1, montaje, totalCompra: compra, venta1, venta: venta1 * mg,
-      carpinteria, vidrios: vidriosV, montajeVenta: montajeV, exacto: !!TIPOLOGIAS[item.tipologia].exacto };
-  }
-
-  // ---------- Referencia WMaker (precio de lista GH calibrado) ----------
-  function basicoWM(tip, W, H) {
-    switch (tip) {
-      case 'pano': return 25.6 + 36.9 * W + 89.2 * H;
-      case 'corr2': return 81.1 + 209.1 * W + 188.5 * H;
-      case 'corr3': return (81.1 + 209.1 * W + 188.5 * H) * 1.30;
-      case 'abrir1': return 32.1 + 87.5 * W + 198.5 * H;
-      case 'abrir2': return 111.3 + 107.0 * W + 309.7 * H;
-      case 'osc1': return (32.1 + 87.5 * W + 198.5 * H) * 1.45;
-      case 'osc2': return (111.3 + 107.0 * W + 309.7 * H) * 1.37;
-      case 'proy': return 15.4 + 208.3 * W + 291.0 * H;
-      case 'puerta1': return 868.7 + 13 * (W + H);
-      case 'puerta2': return (868.7 + 13 * (W + H)) * 1.9;
-    }
-    return 0;
-  }
-  function vidrioWM(tip, W, H) {
-    const a = Math.max(0, (W - 0.1) * (H - 0.1)); let v;
-    if (tip === 'pano') v = 154.5 * a;
-    else if (tip.startsWith('corr')) v = 141 * a - 28;
-    else if (tip === 'abrir1' || tip === 'osc1') v = 129.8 * a - 9.5;
-    else if (tip === 'abrir2' || tip === 'osc2') v = 133.5 * a - 31.2;
-    else if (tip === 'proy') v = 141 * a - 19.1;
-    else v = 155 * a - 30;
-    return Math.max(v, 60 * a, 8);
-  }
-  function mosquiteroWM(tip, W, H) {
-    if (tip.startsWith('corr')) { const n = tip === 'corr3' ? 2 : 1; return n * (45.4 + 120.4 * (W / (tip === 'corr3' ? 3 : 2)) * H) }
-    return 40 + 70 * W * H;
-  }
-  function precioWMaker(item) {
-    const W = item.ancho / 1000, H = item.alto / 1000, fc = esColor(item.color) ? 1.27 : 1;
-    const v = VIDRIOS[item.vidrio] || VIDRIOS.dvh;
-    const basico = basicoWM(item.tipologia, W, H) * fc, vidrio = vidrioWM(item.tipologia, W, H) * v.multWM;
-    const mosq = item.mosquitero && TIPOLOGIAS[item.tipologia].mosq ? mosquiteroWM(item.tipologia, W, H) * fc : 0;
-    return { basico, vidrio, mosq, unitario: basico + vidrio + mosq };
+      carpinteria, vidrios: (V1.vidrios + V1.acristalamiento) * mg, montajeVenta: montaje * mg, mosq, exacto: esExacto(item), secciones: S, division: div };
   }
 
   // ---------- Precio para el presupuesto ----------
@@ -515,18 +561,41 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     P = Object.assign({}, PARAMETROS_BASE, P || {});
     const h = hetmo(item, P);
     const montaje = P.incluirMontaje ? h.montajeVenta : 0;
-    // Mosquitero: Hetmo lo cotiza con otra ficha; mientras tanto se usa la referencia WMaker.
-    const mosq = item.mosquitero && TIPOLOGIAS[item.tipologia].mosq ? mosquiteroWM(item.tipologia, item.ancho / 1000, item.alto / 1000) * (esColor(item.color) ? 1.27 : 1) : 0;
-    return { carpinteria: h.carpinteria, vidrios: h.vidrios, montaje, mosq, unitario: h.carpinteria + h.vidrios + montaje + mosq, hetmo: h };
+    // Mosquitero: Hetmo lo cotiza con otra ficha; mientras tanto se estima con los precios de WMaker.
+    return { carpinteria: h.carpinteria, vidrios: h.vidrios, montaje, mosq: h.mosq, unitario: h.carpinteria + h.vidrios + montaje + h.mosq, hetmo: h };
   }
 
+  const MANO = { izq: 'izquierda', der: 'derecha' };
+  function descSeccion(s) {
+    const t = TIPOS[s.tipo]; let d = t.desc;
+    if (s.tipo !== 'pano' && s.hojas) d += ` ${s.hojas === 1 ? '1 hoja' : s.hojas + ' hojas'}`;
+    if (s.tipo === 'abrir' && (s.osc || []).slice(0, s.hojas).some(Boolean)) {
+      const o = s.osc.slice(0, s.hojas).map((x, i) => x ? i + 1 : 0).filter(Boolean);
+      d += s.hojas === 1 ? ' oscilobatiente' : ` (oscila ${o.length === s.hojas ? 'todas' : 'hoja ' + o.join(' y ')})`;
+    }
+    if (s.tipo !== 'pano' && s.tipo !== 'proy' && s.tipo !== 'band' && s.mano) d += `, ${s.tipo === 'corrediza' ? 'cierre' : 'herraje'} a la ${MANO[s.mano]}`;
+    if (s.mosq && t.mosq) d += t.mosq === 'corredizo' ? ', con mosquitero corredizo' : ', con mosquitero fijo';
+    return d;
+  }
   function descripcion(item) {
-    const t = TIPOLOGIAS[item.tipologia], col = COLORES[item.color] || COLORES.blanco, vid = VIDRIOS[item.vidrio] || VIDRIOS.dvh;
-    let d = t.desc;
-    if (t.hojas > 0) d += ` de ${t.hojas === 1 ? 'una hoja' : t.hojas + ' hojas'}`;
-    d += `, color ${col.nombre.toLowerCase()}, con vidrios ${vid.nombre.toLowerCase()}`;
-    if (item.mosquitero && t.mosq) d += ' y con mosquitero';
-    return d + `. medidas : ${item.ancho}x${item.alto}`;
+    const col = COLORES[item.color] || COLORES.blanco, vid = VIDRIOS[item.vidrio] || VIDRIOS.dvh;
+    const { div, secciones: S } = secciones(item);
+    let d;
+    if (S.length === 1) d = 'Ventana ' + descSeccion(S[0]);
+    else {
+      const pos = div === 'h' ? (i => i === 0 ? 'arriba' : i === S.length - 1 ? 'abajo' : 'al medio') : (i => i === 0 ? 'izquierda' : i === S.length - 1 ? 'derecha' : 'centro');
+      d = `Ventana compuesta con ${S.length - 1} ${div === 'h' ? 'travesaño' + (S.length > 2 ? 's' : '') : 'parante' + (S.length > 2 ? 's' : '')}: ` +
+        S.map((s, i) => `${pos(i)} ${descSeccion(s)} (${s.medida} mm)`).join('; ');
+    }
+    return d + `. Línea Muchtek, color ${col.nombre.toLowerCase()}, vidrios ${vid.nombre.toLowerCase()}. Medidas: ${item.ancho}x${item.alto}`;
+  }
+
+  // Convierte ítems guardados con el formato anterior (tipologia) al de secciones.
+  function migrar(it) {
+    if (it.secciones) return it;
+    const m = { corr2: ['corrediza', 2], corr3: ['corrediza', 3], abrir1: ['abrir', 1], abrir2: ['abrir', 2], osc1: ['oscilo', 1], osc2: ['oscilo', 2], pano: ['pano', 0], proy: ['proy', 1], puerta1: ['puerta', 1], puerta2: ['puerta', 2] }[it.tipologia] || ['corrediza', 2];
+    const r = Object.assign({}, it, { division: 'no', secciones: [{ tipo: m[0], hojas: m[1], mano: 'izq', mosq: !!it.mosquitero, osc: [] }] });
+    delete r.tipologia; delete r.mosquitero; return r;
   }
 
   // Descuentos: por renglón (item.descuento), por rubro (P.dtoCarp, dtoVid, dtoMont, dtoMosq),
@@ -570,7 +639,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       hayCon: G.con.unidades > 0, haySin: G.sin.unidades > 0 };
   }
 
-  const api = { TIPOLOGIAS, COLORES, VIDRIOS, PARAMETROS_BASE, ART, hetmo, precio, precioWMaker, descripcion, totales };
+  const api = { TIPOS, COLORES, VIDRIOS, PARAMETROS_BASE, ART, secciones, hetmo, precio, descripcion, descSeccion, totales, migrar, esExacto };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.MotorGH = api;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -582,116 +651,199 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   const fmt = x => (x || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const f3 = x => (x || 0).toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   const KEY = 'gh-cotizador-v2';
-  const PARAM_LABELS = {
-    margen: 'Margen tarifa %', mermaLineal: 'Merma artículos por metro (×)', montajeMl: 'Montaje USD por metro de perímetro',
-    recargoHerrajeGU: 'Recargo herraje GU (×)', iva: 'IVA %',
-  };
+  const PARAM_LABELS = { margen: 'Margen tarifa %', mermaLineal: 'Merma artículos por metro (×)', montajeMl: 'Montaje USD por metro de perímetro', recargoHerrajeGU: 'Recargo herraje GU (×)', iva: 'IVA %' };
+  const sec = (tipo, hojas, extra) => Object.assign({ tipo, hojas, mano: 'der', mosq: false, osc: [] }, extra || {});
   const ejemplo = () => ({
     cliente: { nombre: 'Ejemplo · ventanas de prueba Hetmo', dir: '', fecha: new Date().toISOString().slice(0, 10) },
     items: [
-      { id: 1, cod: 'V1', tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
-      { id: 2, cod: 'V2', tipologia: 'abrir1', ancho: 600, alto: 1000, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
-      { id: 3, cod: 'V3', tipologia: 'pano', ancho: 1000, alto: 1000, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
-      { id: 4, cod: 'V4', tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'golden', vidrio: 'dvh', mosquitero: false },
+      { id: 1, cod: 'V1', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', division: 'no', secciones: [sec('corrediza', 2, { mano: 'izq' })] },
+      { id: 2, cod: 'V2', ancho: 600, alto: 1000, cantidad: 1, color: 'blanco', vidrio: 'dvh', division: 'no', secciones: [sec('abrir', 1)] },
+      { id: 3, cod: 'V3', ancho: 1000, alto: 1000, cantidad: 1, color: 'blanco', vidrio: 'dvh', division: 'no', secciones: [sec('pano', 0)] },
+      { id: 4, cod: 'V4', ancho: 1500, alto: 1100, cantidad: 1, color: 'golden', vidrio: 'dvh', division: 'no', secciones: [sec('corrediza', 2, { mano: 'izq' })] },
+      { id: 5, cod: 'V5', ancho: 800, alto: 1600, cantidad: 1, color: 'blanco', vidrio: 'dvh', division: 'h', secciones: [sec('oscilo', 1, { medida: 1100, mosq: true }), sec('pano', 0)] },
     ],
-    params: { tipoCambio: 1565 }, sel: 1, nextId: 5,
+    params: { tipoCambio: 1565 }, sel: 1, nextId: 6,
   });
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || ejemplo() } catch { S = ejemplo() }
+  S.items = (S.items || []).map(M.migrar);
   const P = () => Object.assign({}, M.PARAMETROS_BASE, S.params);
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch {} };
   let editId = null;
+  // Estado del formulario: composición en secciones
+  let F = { division: 'no', secciones: [sec('corrediza', 2, { mano: 'izq' })] };
 
-  const fill = (sel, obj) => { sel.innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.nombre}${obj === M.TIPOLOGIAS && !v.exacto ? " (aprox.)" : ""}</option>`).join('') };
-  fill($('f-tip'), M.TIPOLOGIAS); fill($('f-color'), M.COLORES); fill($('f-vidrio'), M.VIDRIOS);
+  const opts = obj => Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.nombre}</option>`).join('');
+  $('f-color').innerHTML = opts(M.COLORES); $('f-vidrio').innerHTML = opts(M.VIDRIOS);
 
-  function leerForm() {
-    return { tipologia: $('f-tip').value, cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
+  function itemForm() {
+    return { cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
       ancho: Math.max(300, Math.round(+$('f-ancho').value || 0)), alto: Math.max(300, Math.round(+$('f-alto').value || 0)),
-      color: $('f-color').value, vidrio: $('f-vidrio').value, mosquitero: $('f-mosq').checked, descuento: Math.min(100, Math.max(0, +$('f-dto').value || 0)), iva: $('f-iva').value };
+      color: $('f-color').value, vidrio: $('f-vidrio').value, descuento: Math.min(100, Math.max(0, +$('f-dto').value || 0)), iva: $('f-iva').value,
+      division: F.division, secciones: JSON.parse(JSON.stringify(F.secciones)) };
   }
   function cargarForm(it) {
-    $('f-tip').value = it.tipologia; $('f-cod').value = it.cod || ''; $('f-cant').value = it.cantidad;
-    $('f-ancho').value = it.ancho; $('f-alto').value = it.alto; $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-mosq').checked = !!it.mosquitero; $('f-dto').value = it.descuento || 0; $('f-iva').value = it.iva || 'con';
+    $('f-cod').value = it.cod || ''; $('f-cant').value = it.cantidad; $('f-ancho').value = it.ancho; $('f-alto').value = it.alto;
+    $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-dto').value = it.descuento || 0; $('f-iva').value = it.iva || 'con';
+    F = { division: it.division || 'no', secciones: JSON.parse(JSON.stringify(it.secciones)) };
+    renderSecs();
   }
-  function sugerirCodigo(tip) { const pre = M.TIPOLOGIAS[tip].prefijo; let n = 1; while (S.items.some(i => i.cod === pre + n)) n++; return pre + n }
-  const chip = t => M.TIPOLOGIAS[t].exacto ? '<span class="chip">Igual a Hetmo</span>' : '<span class="chip warn">Aproximado</span>';
+  function sugerirCodigo() { let n = 1; while (S.items.some(i => i.cod === 'V' + n)) n++; return 'V' + n }
 
+  // ----- editor de secciones -----
+  function renderSecs() {
+    $('f-div').value = F.division;
+    const multi = F.division !== 'no';
+    $('l-nsec').hidden = !multi; if (multi) $('f-nsec').value = F.secciones.length;
+    $('secs-leyenda').textContent = multi ? (F.division === 'h' ? 'Secciones, de arriba hacia abajo' : 'Secciones, de izquierda a derecha') : 'Tipología';
+    const it = itemForm(), { secciones: R } = M.secciones(it);
+    const eje = F.division === 'h' ? 'Alto' : 'Ancho';
+    const pos = (i, n) => F.division === 'h' ? (i === 0 ? 'arriba' : i === n - 1 ? 'abajo' : 'al medio') : (i === 0 ? 'izquierda' : i === n - 1 ? 'derecha' : 'centro');
+    $('secs').innerHTML = F.secciones.map((s, i) => {
+      const t = M.TIPOS[s.tipo], ult = i === F.secciones.length - 1;
+      const hojas = t.hojas.map(h => `<option value="${h}" ${h === s.hojas ? 'selected' : ''}>${h || '—'}</option>`).join('');
+      const conMano = !['pano', 'proy', 'band'].includes(s.tipo);
+      const manoTxt = s.tipo === 'corrediza' ? 'Cierre a la' : s.hojas > 1 ? 'Hoja que abre primero' : 'Herraje (manija) a la';
+      let checks = '';
+      if (t.mosq) checks += `<label class="check"><input type="checkbox" data-i="${i}" data-k="mosq" ${s.mosq ? 'checked' : ''}> ${t.mosq === 'corredizo' ? 'Mosquitero corredizo' : 'Mosquitero fijo'}</label>`;
+      if (s.tipo === 'abrir') for (let h = 0; h < s.hojas; h++) checks += `<label class="check"><input type="checkbox" data-i="${i}" data-osc="${h}" ${(s.osc || [])[h] ? 'checked' : ''}> ${s.hojas === 1 ? 'Que oscile (oscilobatiente)' : `Hoja ${h + 1} oscila`}</label>`;
+      return `<div class="sec">
+        ${multi ? `<div class="tit"><span>Sección ${i + 1} · ${pos(i, F.secciones.length)}</span><span class="muted">${R[i].w} × ${R[i].h} mm</span></div>
+        <label>${eje} (mm)<input type="number" min="200" step="5" data-i="${i}" data-k="medida" value="${ult ? R[i].medida : (s.medida || R[i].medida)}" ${ult ? 'disabled title="Es lo que queda del total"' : ''}></label>` : ''}
+        <label ${multi ? '' : 'class="span2"'}>Tipo<select data-i="${i}" data-k="tipo">${Object.entries(M.TIPOS).map(([k, v]) => `<option value="${k}" ${k === s.tipo ? 'selected' : ''}>${v.nombre}</option>`).join('')}</select></label>
+        <label>Hojas<select data-i="${i}" data-k="hojas" ${t.hojas.length < 2 ? 'disabled' : ''}>${hojas}</select></label>
+        ${conMano ? `<label>${manoTxt}<select data-i="${i}" data-k="mano"><option value="izq" ${s.mano === 'izq' ? 'selected' : ''}>Izquierda</option><option value="der" ${s.mano !== 'izq' ? 'selected' : ''}>Derecha</option></select></label>` : ''}
+        ${checks ? `<div class="checks">${checks}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+  $('secs').addEventListener('input', e => {
+    const el = e.target, i = +el.dataset.i; if (isNaN(i)) return;
+    const s = F.secciones[i];
+    if (el.dataset.osc != null) { s.osc = s.osc || []; s.osc[+el.dataset.osc] = el.checked }
+    else if (el.dataset.k === 'mosq') s.mosq = el.checked;
+    else if (el.dataset.k === 'tipo') { s.tipo = el.value; const hh = M.TIPOS[s.tipo].hojas; if (!hh.includes(s.hojas)) s.hojas = hh[0]; s.osc = []; if (!M.TIPOS[s.tipo].mosq) s.mosq = false; renderSecs() }
+    else if (el.dataset.k === 'hojas') { s.hojas = +el.value; renderSecs() }
+    else if (el.dataset.k === 'mano') s.mano = el.value;
+    else if (el.dataset.k === 'medida') { s.medida = +el.value || 0; const R = M.secciones(itemForm()).secciones; document.querySelectorAll('#secs .sec .tit .muted').forEach((x, j) => x.textContent = `${R[j].w} × ${R[j].h} mm`); const u = document.querySelector(`#secs input[data-k="medida"][disabled]`); if (u) u.value = R[R.length - 1].medida }
+    preview();
+  });
+  $('f-div').addEventListener('change', e => {
+    F.division = e.target.value;
+    if (F.division === 'no') F.secciones = F.secciones.slice(0, 1);
+    else if (F.secciones.length < 2) {
+      const tot = F.division === 'h' ? +$('f-alto').value : +$('f-ancho').value;
+      F.secciones[0].medida = Math.round(tot * (F.division === 'h' ? 0.7 : 0.5) / 5) * 5;
+      F.secciones.push(sec('pano', 0));
+    }
+    renderSecs(); preview();
+  });
+  $('f-nsec').addEventListener('change', e => {
+    const n = +e.target.value;
+    while (F.secciones.length < n) F.secciones.push(sec('pano', 0));
+    F.secciones = F.secciones.slice(0, n);
+    const tot = F.division === 'h' ? +$('f-alto').value : +$('f-ancho').value;
+    F.secciones.forEach(s => s.medida = Math.round(tot / n / 5) * 5);
+    renderSecs(); preview();
+  });
+
+  // ----- dibujo -----
   function dibujar(it) {
-    const t = M.TIPOLOGIAS[it.tipologia];
+    const { div, secciones: R } = M.secciones(it);
     const maxW = 220, maxH = 200, k = Math.min(maxW / it.ancho, maxH / it.alto);
-    const w = it.ancho * k, h = it.alto * k, x0 = 50 + (maxW - w) / 2, y0 = 14 + (maxH - h) / 2;
-    const fr = 7, ink = 'var(--ink)', mut = 'var(--muted)', acc = 'var(--accent)';
+    const w = it.ancho * k, h = it.alto * k, x0 = 54 + (maxW - w) / 2, y0 = 12 + (maxH - h) / 2;
+    const ink = 'var(--ink)', mut = 'var(--muted)', acc = 'var(--accent)';
     const marco = it.color && it.color !== 'blanco' ? 'var(--wood)' : ink;
     let s = `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="${marco}" stroke-width="3"/>`;
     const glass = (x, y, ww, hh) => `<rect x="${x}" y="${y}" width="${Math.max(ww, 1)}" height="${Math.max(hh, 1)}" fill="var(--accent-soft)" stroke="${mut}" stroke-width="1"/>`;
-    const ix = x0 + fr, iy = y0 + fr, iw = w - 2 * fr, ih = h - 2 * fr;
-    if (it.tipologia === 'pano') s += glass(ix, iy, iw, ih);
-    else if (it.tipologia.startsWith('corr')) {
-      const n = t.hojas, hw = iw / n;
-      for (let i = 0; i < n; i++) {
-        const x = ix + i * hw; s += glass(x + 3, iy + 3, hw - 6, ih - 6) + `<rect x="${x}" y="${iy}" width="${hw}" height="${ih}" fill="none" stroke="${marco}" stroke-width="1.5"/>`;
-        const cy = iy + ih / 2, dir = i % 2 ? -1 : 1, cx = x + hw / 2;
-        s += `<path d="M${cx - 14 * dir} ${cy} h${28 * dir} m${-6 * dir} -5 l${6 * dir} 5 l${-6 * dir} 5" fill="none" stroke="${acc}" stroke-width="1.6"/>`;
-      }
-    } else {
-      const n = t.hojas, hw = iw / n;
-      for (let i = 0; i < n; i++) {
-        const x = ix + i * hw; s += glass(x + 4, iy + 4, hw - 8, ih - 8) + `<rect x="${x}" y="${iy}" width="${hw}" height="${ih}" fill="none" stroke="${marco}" stroke-width="1.5"/>`;
-        const bis = (n === 1 || i === 0) ? x : x + hw, otro = bis === x ? x + hw : x;
-        if (it.tipologia === 'proy') s += `<path d="M${x} ${iy + ih} L${x + hw / 2} ${iy} L${x + hw} ${iy + ih}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
-        else {
-          s += `<path d="M${otro} ${iy} L${bis} ${iy + ih / 2} L${otro} ${iy + ih}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="5 3"/>`;
-          if (it.tipologia.startsWith('osc')) s += `<path d="M${x} ${iy} L${x + hw / 2} ${iy + ih} L${x + hw} ${iy}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="2 3"/>`;
+    const tri = (pts, dash) => `<path d="M${pts[0]} L${pts[1]} L${pts[2]}" fill="none" stroke="${acc}" stroke-width="1.2" stroke-dasharray="${dash}"/>`;
+    const manija = (x, y, vert) => vert ? `<rect x="${x - 2}" y="${y - 7}" width="4" height="14" rx="1.5" fill="${ink}"/>` : `<rect x="${x - 7}" y="${y - 2}" width="14" height="4" rx="1.5" fill="${ink}"/>`;
+    let ox = x0, oy = y0;
+    R.forEach((r, i) => {
+      const sw = r.w * k, sh = r.h * k, fr = 6;
+      const ix = ox + fr, iy = oy + fr, iw = sw - 2 * fr, ih = sh - 2 * fr;
+      if (i > 0) s += div === 'v' ? `<line x1="${ox}" y1="${y0}" x2="${ox}" y2="${y0 + h}" stroke="${marco}" stroke-width="3"/>` : `<line x1="${x0}" y1="${oy}" x2="${x0 + w}" y2="${oy}" stroke="${marco}" stroke-width="3"/>`;
+      if (r.tipo === 'pano') s += glass(ix, iy, iw, ih);
+      else if (r.tipo === 'corrediza') {
+        const n = r.hojas, hw = iw / n;
+        for (let j = 0; j < n; j++) {
+          const x = ix + j * hw; s += glass(x + 3, iy + 3, hw - 6, ih - 6) + `<rect x="${x}" y="${iy}" width="${hw}" height="${ih}" fill="none" stroke="${marco}" stroke-width="1.5"/>`;
+          const cy = iy + ih / 2, dir = j < n / 2 ? 1 : -1, cx = x + hw / 2;
+          s += `<path d="M${cx - 12 * dir} ${cy} h${24 * dir} m${-5 * dir} -4 l${5 * dir} 4 l${-5 * dir} 4" fill="none" stroke="${acc}" stroke-width="1.5"/>`;
+        }
+        s += manija(r.mano === 'izq' ? ix + 6 : ix + iw - 6, iy + ih / 2, true);
+      } else {
+        const n = r.hojas, hw = iw / n;
+        for (let j = 0; j < n; j++) {
+          const x = ix + j * hw, xr = x + hw, yb = iy + ih, ym = iy + ih / 2;
+          s += glass(x + 4, iy + 4, hw - 8, ih - 8) + `<rect x="${x}" y="${iy}" width="${hw}" height="${ih}" fill="none" stroke="${marco}" stroke-width="1.5"/>`;
+          if (r.tipo === 'proy') s += tri([`${x} ${iy}`, `${x + hw / 2} ${yb}`, `${xr} ${iy}`], '5 3');
+          else if (r.tipo === 'band') s += tri([`${x} ${yb}`, `${x + hw / 2} ${iy}`, `${xr} ${yb}`], '5 3');
+          else {
+            // vértice del lado de la manija (opuesto a las bisagras)
+            const manijaDer = n === 1 ? r.mano !== 'izq' : j < n / 2;
+            const ap = manijaDer ? xr : x, bis = manijaDer ? x : xr;
+            s += tri([`${bis} ${iy}`, `${ap} ${ym}`, `${bis} ${yb}`], '5 3');
+            const oscila = r.tipo === 'oscilo' || (r.osc || [])[j];
+            if (oscila) s += tri([`${x} ${yb}`, `${x + hw / 2} ${iy}`, `${xr} ${yb}`], '2 3');
+            const activa = n === 1 || (r.mano === 'izq' ? j === 0 : j === n - 1) || n > 2;
+            if (activa && r.tipo !== 'puerta') s += manija(manijaDer ? xr - 6 : x + 6, ym, true);
+            if (r.tipo === 'puerta' && activa) s += manija(manijaDer ? xr - 6 : x + 6, ym, true);
+          }
         }
       }
-    }
-    const yb = y0 + h + 16, xl = x0 - 16;
+      if (r.mosq) s += `<rect x="${ix + 2}" y="${iy + 2}" width="${Math.max(iw - 4, 1)}" height="${Math.max(ih - 4, 1)}" fill="none" stroke="${mut}" stroke-width="1" stroke-dasharray="1 2"/>`;
+      // cota de la sección
+      if (R.length > 1) {
+        if (div === 'v') s += `<text x="${ox + sw / 2}" y="${y0 + h + 30}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="${mut}">${r.medida}</text>`;
+        else s += `<text x="${x0 + w + 6}" y="${oy + sh / 2 + 3}" font-family="JetBrains Mono, monospace" font-size="9" fill="${mut}">${r.medida}</text>`;
+      }
+      if (div === 'v') ox += sw; else if (div === 'h') oy += sh;
+    });
+    const yb = y0 + h + 14, xl = x0 - 16;
     s += `<path d="M${x0} ${yb} H${x0 + w} M${x0} ${yb - 4} v8 M${x0 + w} ${yb - 4} v8" stroke="${mut}" stroke-width="1" fill="none"/>`;
-    s += `<text x="${x0 + w / 2}" y="${yb + 14}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}">${it.ancho}</text>`;
+    s += `<text x="${x0 + w / 2}" y="${yb + 12}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}">${it.ancho}</text>`;
     s += `<path d="M${xl} ${y0} V${y0 + h} M${xl - 4} ${y0} h8 M${xl - 4} ${y0 + h} h8" stroke="${mut}" stroke-width="1" fill="none"/>`;
     s += `<text x="${xl - 6}" y="${y0 + h / 2}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}" transform="rotate(-90 ${xl - 6} ${y0 + h / 2})">${it.alto}</text>`;
     $('dibujo').innerHTML = s;
   }
 
+  const chip = it => M.esExacto(it) ? '<span class="chip">Igual a Hetmo</span>' : '<span class="chip warn">Aproximado</span>';
   function preview() {
-    const it = leerForm(), t = M.TIPOLOGIAS[it.tipologia];
-    $('l-mosq').hidden = !t.mosq;
+    const it = itemForm();
     dibujar(it);
-    const p = M.precio(it, P()), wm = M.precioWMaker(it);
+    const p = M.precio(it, P());
     const rows = [['Carpintería', p.carpinteria], ['Vidrios', p.vidrios]];
     if (P().incluirMontaje) rows.push(['Montaje', p.montaje]);
     if (p.mosq) rows.push(['Mosquitero (estimado)', p.mosq]);
-    $('p-chip').innerHTML = chip(it.tipologia);
+    $('p-chip').innerHTML = chip(it);
     $('p-desg').innerHTML = rows.map(([a, b]) => `<span>${a}</span><span class="num">${fmt(b)}</span>`).join('') +
       `<span class="tot">USD x U</span><span class="num tot">${fmt(p.unitario)}</span>` +
       (it.descuento ? `<span>Con ${it.descuento}% dto.</span><span class="num">${fmt(p.unitario * (1 - it.descuento / 100))}</span>` : '') +
       (it.cantidad > 1 ? `<span class="muted">× ${it.cantidad}</span><span class="num muted">${fmt(p.unitario * (1 - (it.descuento || 0) / 100) * it.cantidad)}</span>` : '') +
-      `<span class="muted">Costo de compra</span><span class="num muted">${fmt(p.hetmo.totalCompra)}</span>` +
-      `<span class="muted">Referencia WMaker</span><span class="num muted">${fmt(wm.unitario)}</span>`;
-    $('p-nota').innerHTML = `<small>Ficha ${t.ficha}. ${t.exacto ? 'Calcula igual que Hetmo.' : 'Armada por analogía con las fichas verificadas: tomala como estimación.'}</small>`;
+      `<span class="muted">Costo de compra</span><span class="num muted">${fmt(p.hetmo.totalCompra)}</span>`;
+    $('p-nota').innerHTML = `<small>${M.esExacto(it) ? 'Calcula igual que Hetmo.' : 'Tipología o combinación todavía sin captura de Hetmo: tomalo como estimación.'}</small>`;
   }
 
+  // ----- presupuesto -----
   function render() {
-    const PP = P();
-    const tb = $('t-items');
+    const PP = P(), tb = $('t-items');
     if (!S.items.length) tb.innerHTML = `<tr><td colspan="6" class="muted">Todavía no hay aberturas. Cargá una a la izquierda y tocá "Agregar al presupuesto".</td></tr>`;
     else tb.innerHTML = S.items.map(it => {
-      const p = M.precio(it, PP);
-      const cl = it.id === S.sel ? 'sel' : '';
-      return `<tr class="${cl} sin-borde"><td><strong>${it.cod || '—'}</strong> ${M.TIPOLOGIAS[it.tipologia].exacto ? '' : '<span class="chip warn">aprox.</span>'} ${it.iva === 'sin' ? '<span class="chip">sin IVA</span>' : ''}</td>
+      const p = M.precio(it, PP), cl = it.id === S.sel ? 'sel' : '', u = p.unitario * (1 - (it.descuento || 0) / 100);
+      return `<tr class="${cl} sin-borde"><td><strong>${it.cod || '—'}</strong> ${M.esExacto(it) ? '' : '<span class="chip warn">aprox.</span>'} ${it.iva === 'sin' ? '<span class="chip">sin IVA</span>' : ''}</td>
         <td class="num">${it.cantidad}</td><td class="mono" style="white-space:nowrap">${it.ancho} × ${it.alto}</td>
-        <td class="num">${fmt(p.unitario * (1 - (it.descuento || 0) / 100))}${it.descuento ? `<div class="desc">−${it.descuento}% de ${fmt(p.unitario)}</div>` : ''}</td><td class="num">${fmt(p.unitario * (1 - (it.descuento || 0) / 100) * it.cantidad)}</td>
-        <td style="white-space:nowrap"><button class="link" data-ed="${it.id}">Editar</button><button class="link" data-dup="${it.id}">Duplicar</button><button class="link del" data-del="${it.id}">Quitar</button></td></tr><tr class="${cl}"><td colspan="6" class="desc" style="padding-top:0">${M.descripcion(it)}</td></tr>`;
+        <td class="num">${fmt(u)}${it.descuento ? `<div class="desc">−${it.descuento}% de ${fmt(p.unitario)}</div>` : ''}</td><td class="num">${fmt(u * it.cantidad)}</td>
+        <td style="white-space:nowrap"><button class="link" data-ed="${it.id}">Editar</button><button class="link" data-dup="${it.id}">Duplicar</button><button class="link del" data-del="${it.id}">Quitar</button></td></tr>
+        <tr class="${cl}"><td colspan="6" class="desc" style="padding-top:0">${M.descripcion(it)}</td></tr>`;
     }).join('');
     const uds = S.items.reduce((s, i) => s + i.cantidad, 0);
     $('pres-cant').textContent = uds ? `${uds} unidad${uds > 1 ? 'es' : ''}` : '';
     $('t-tc').value = PP.tipoCambio; $('t-montaje').checked = !!PP.incluirMontaje; $('d-aplica').value = PP.dtoAplica;
     document.querySelectorAll('input.dto').forEach(i => { if (document.activeElement !== i) i.value = PP[i.dataset.k] || '' });
     const T = M.totales(S.items, PP);
-    const L = (t, v, cls) => v > 0.005 ? `<span class="${cls || ''}">${t}</span><span class="num ${cls || ''}">${v < 0 ? '− ' : ''}USD ${fmt(Math.abs(v))}</span>` : '';
     const bloque = (titulo, g, conIva) => `<span class="grupo">${titulo}</span>
-      ${L('Precio Hetmo', g.lista)}
+      <span>Precio Hetmo</span><span class="num">USD ${fmt(g.lista)}</span>
       ${g.dtoRenglon > 0.005 ? `<span>Dto. por renglón</span><span class="num">− USD ${fmt(g.dtoRenglon)}</span>` : ''}
       ${g.dtoRubros > 0.005 ? `<span>Dto. por rubro</span><span class="num">− USD ${fmt(g.dtoRubros)}</span>` : ''}
       ${g.dtoGeneral > 0.005 ? `<span>Dto. general</span><span class="num">− USD ${fmt(g.dtoGeneral)}</span>` : ''}
@@ -714,9 +866,8 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     const f = c.fecha ? c.fecha.split('-').reverse().join('/') : '';
     let s = `GH Aberturas S.R.L.\nFecha: ${f}\nSres. ${c.nombre || ''}   Dir. ${c.dir || ''}\n\n`;
     for (const it of S.items) {
-      const p = M.precio(it, PP);
-      const u = p.unitario * (1 - (it.descuento || 0) / 100);
-      s += `${it.cod || ''}   Uds. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(u)}   Total ${fmt(u * it.cantidad)}\n${M.descripcion(it)}\n\n`;
+      const p = M.precio(it, PP), u = p.unitario * (1 - (it.descuento || 0) / 100);
+      s += `${it.cod || ''}   Uds. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(u)}   Total ${fmt(u * it.cantidad)}${it.iva === 'sin' ? '   (sin IVA)' : ''}\n${M.descripcion(it)}\n\n`;
     }
     const G = T.grupos, linea = (t, v) => v > 0.005 ? `${t} : USD ${fmt(v)}\n` : '';
     const bloque = (titulo, g, conIva) => {
@@ -735,59 +886,55 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
 
   function renderHetmo() {
     const sel = $('h-item'); const prev = +sel.value || S.sel;
-    sel.innerHTML = S.items.map(i => `<option value="${i.id}">${i.cod || '—'} · ${M.TIPOLOGIAS[i.tipologia].nombre} ${i.ancho}×${i.alto} ${M.COLORES[i.color].nombre}</option>`).join('');
+    sel.innerHTML = S.items.map(i => `<option value="${i.id}">${i.cod || '—'} · ${i.ancho}×${i.alto} ${M.COLORES[i.color].nombre}</option>`).join('');
     const it = S.items.find(i => i.id === prev) || S.items[0];
-    if (!it) { $('h-det').innerHTML = `<tr><td colspan="7" class="muted">Agregá una abertura al presupuesto para ver su despiece.</td></tr>`; $('h-res').innerHTML = ''; $('h-chip').innerHTML = ''; return }
-    sel.value = it.id; $('h-chip').innerHTML = chip(it.tipologia);
+    if (!it) { $('h-det').innerHTML = `<tr><td colspan="8" class="muted">Agregá una abertura al presupuesto para ver su despiece.</td></tr>`; $('h-res').innerHTML = ''; $('h-chip').innerHTML = ''; return }
+    sel.value = it.id; $('h-chip').innerHTML = chip(it);
     const PP = P(), h = M.hetmo(it, PP), mg = 1 + PP.margen / 100;
     const N = { perfiles: 'Perfiles', refuerzos: 'Refuerzos', juntas: 'Juntas', tornilleria: 'Tornillería', accesorios: 'Accesorios', vidrios: 'Vidrios', tapajuntas: 'Tapajuntas', herraje: 'Herraje', fabricacion: 'Fabricación ventana', acristalamiento: 'Acristalamiento' };
     $('h-res').innerHTML = Object.keys(N).map(k => `<tr><td>${N[k]}</td><td class="num">${f3(h.compra[k])}</td><td class="num">${f3(h.venta1Grupos[k])}</td><td class="num">${PP.margen}</td><td class="num">${f3(h.venta1Grupos[k] * mg)}</td></tr>`).join('') +
       `<tr><td>Montaje</td><td class="num">0</td><td class="num">${f3(h.montaje)}</td><td class="num">${PP.margen}</td><td class="num">${f3(h.montaje * mg)}</td></tr>` +
       `<tr><td><strong>Total compra / venta 1 / venta</strong></td><td class="num"><strong>${fmt(h.totalCompra)}</strong></td><td class="num"><strong>${fmt(h.venta1)}</strong></td><td></td><td class="num"><strong>${fmt(h.venta)}</strong></td></tr>`;
-    $('h-det').innerHTML = h.detalle.map(d => `<tr><td class="mono">${d.cod}</td><td>${d.desc}</td><td class="num">${d.unidad === 'm²' ? f3(d.cant) + ' m²' : d.unidad === 'm' && !d.largo ? f3(d.cant) + ' m' : d.uds}</td><td class="num mono">${d.largo || ''}</td><td class="muted">${d.det}</td><td class="num">${f3(d.precio)}</td><td class="num">${f3(d.importe)}</td></tr>`).join('');
+    $('h-det').innerHTML = h.detalle.map(d => `<tr><td class="muted">${d.seccion || ''}</td><td class="mono">${d.cod}</td><td>${d.desc}</td><td class="num">${d.unidad === 'm²' ? f3(d.cant) + ' m²' : d.unidad === 'm' && !d.largo ? f3(d.cant) + ' m' : d.uds}</td><td class="num mono">${d.largo || ''}</td><td class="muted">${d.det}</td><td class="num">${f3(d.precio)}</td><td class="num">${f3(d.importe)}</td></tr>`).join('');
   }
 
   function renderParams() { const p = P(); $('params').innerHTML = Object.keys(PARAM_LABELS).map(k => `<label>${PARAM_LABELS[k]}<input type="number" step="any" id="p-${k}" data-k="${k}" value="${p[k]}"></label>`).join('') }
 
   function validar() {
-    const casos = [['V1 corrediza 1500×1100 blanca', { tipologia: 'corr2', ancho: 1500, alto: 1100, color: 'blanco', vidrio: 'dvh' }, 389.25, 757.77],
-      ['V4 corrediza 1500×1100 golden oak', { tipologia: 'corr2', ancho: 1500, alto: 1100, color: 'golden', vidrio: 'dvh' }, 455.43, 866.63],
-      ['V2 abrir 600×1000 blanca', { tipologia: 'abrir1', ancho: 600, alto: 1000, color: 'blanco', vidrio: 'dvh' }, 207.82, 414.35],
-      ['V3 paño fijo 1000×1000 blanco', { tipologia: 'pano', ancho: 1000, alto: 1000, color: 'blanco', vidrio: 'dvh' }, 144.00, 336.25]];
+    const v = (n, ancho, alto, color, tipo, hojas, c, venta) => [n, { ancho, alto, color, vidrio: 'dvh', division: 'no', secciones: [sec(tipo, hojas)] }, c, venta];
+    const casos = [v('V1 corrediza 1500×1100 blanca', 1500, 1100, 'blanco', 'corrediza', 2, 389.25, 757.77), v('V4 corrediza 1500×1100 golden oak', 1500, 1100, 'golden', 'corrediza', 2, 455.43, 866.63),
+      v('V2 abrir 600×1000 blanca', 600, 1000, 'blanco', 'abrir', 1, 207.82, 414.35), v('V3 paño fijo 1000×1000 blanco', 1000, 1000, 'blanco', 'pano', 0, 144.00, 336.25)];
     let maxd = 0;
-    $('v-tab').innerHTML = casos.map(([n, it, c, v]) => {
-      const h = M.hetmo(it, Object.assign({}, S.params, { tipoCambio: 1540 })), d = (h.venta - v) / v; maxd = Math.max(maxd, Math.abs(d));
-      return `<tr><td>${n}</td><td class="num">${fmt(c)}</td><td class="num">${fmt(h.totalCompra)}</td><td class="num">${fmt(v)}</td><td class="num">${fmt(h.venta)}</td><td class="num ${Math.abs(d) < .001 ? 'e-ok' : 'e-mid'}">${(d * 100).toFixed(2)}%</td></tr>`;
+    $('v-tab').innerHTML = casos.map(([n, it, c, vt]) => {
+      const h = M.hetmo(it, Object.assign({}, S.params, { tipoCambio: 1540 })), d = (h.venta - vt) / vt; maxd = Math.max(maxd, Math.abs(d));
+      return `<tr><td>${n}</td><td class="num">${fmt(c)}</td><td class="num">${fmt(h.totalCompra)}</td><td class="num">${fmt(vt)}</td><td class="num">${fmt(h.venta)}</td><td class="num ${Math.abs(d) < .001 ? 'e-ok' : 'e-mid'}">${(d * 100).toFixed(2)}%</td></tr>`;
     }).join('');
     $('v-res').textContent = maxd < .001 ? '4 de 4 ventanas iguales a Hetmo' : `diferencia máxima ${(maxd * 100).toFixed(2)}%`;
   }
 
-  // eventos
-  ['f-tip', 'f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-mosq', 'f-dto', 'f-iva'].forEach(id => $(id).addEventListener('input', preview));
-  $('f-tip').addEventListener('change', () => { if (!editId) $('f-cod').value = sugerirCodigo($('f-tip').value) });
+  // ----- eventos -----
+  ['f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-dto', 'f-iva'].forEach(id => $(id).addEventListener('input', () => { if (id === 'f-ancho' || id === 'f-alto') renderSecs(); preview() }));
   $('f-item').addEventListener('submit', e => {
-    e.preventDefault(); const it = leerForm(); if (!it.cod) it.cod = sugerirCodigo(it.tipologia);
+    e.preventDefault(); const it = itemForm(); if (!it.cod) it.cod = sugerirCodigo();
+    it.secciones = M.secciones(it).secciones.map(({ tipo, hojas, mano, mosq, osc, medida }) => ({ tipo, hojas, mano, mosq: !!mosq, osc: osc || [], medida }));
     if (editId) { Object.assign(S.items.find(i => i.id === editId), it); S.sel = editId; toast('Abertura actualizada') }
     else { it.id = S.nextId++; S.items.push(it); S.sel = it.id; toast('Agregada al presupuesto') }
     $('h-item').value = S.sel; salirEdicion(); render();
   });
-  function salirEdicion() { editId = null; $('b-guardar').textContent = 'Agregar al presupuesto'; $('b-cancelar').hidden = true; $('modo-chip').textContent = 'Nueva'; $('f-cod').value = sugerirCodigo($('f-tip').value); preview() }
+  function salirEdicion() { editId = null; $('b-guardar').textContent = 'Agregar al presupuesto'; $('b-cancelar').hidden = true; $('modo-chip').textContent = 'Nueva'; $('f-cod').value = sugerirCodigo(); preview() }
   $('b-cancelar').addEventListener('click', salirEdicion);
   $('t-items').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.ed) { const it = S.items.find(i => i.id === +b.dataset.ed); editId = it.id; S.sel = it.id; cargarForm(it); $('b-guardar').textContent = 'Guardar cambios'; $('b-cancelar').hidden = false; $('modo-chip').textContent = 'Editando ' + (it.cod || ''); $('h-item').value = it.id; preview(); render(); $('f-ancho').focus() }
-    if (b.dataset.dup) { const it = S.items.find(i => i.id === +b.dataset.dup); const n = Object.assign({}, it, { id: S.nextId++, cod: sugerirCodigo(it.tipologia) }); S.items.push(n); S.sel = n.id; render(); toast('Duplicada como ' + n.cod) }
+    if (b.dataset.dup) { const it = S.items.find(i => i.id === +b.dataset.dup); const n = JSON.parse(JSON.stringify(it)); n.id = S.nextId++; n.cod = sugerirCodigo(); S.items.push(n); S.sel = n.id; render(); toast('Duplicada como ' + n.cod) }
     if (b.dataset.del) { S.items = S.items.filter(i => i.id !== +b.dataset.del); if (editId === +b.dataset.del) salirEdicion(); render() }
   });
-  document.querySelectorAll('input.dto').forEach(i => i.addEventListener('input', e => { S.params[e.target.dataset.k] = Math.max(0, +e.target.value || 0); render() }));
-  $('d-aplica').addEventListener('change', e => { S.params.dtoAplica = e.target.value; render() });
   $('t-tc').addEventListener('input', e => { const v = +e.target.value; if (v > 0) { S.params.tipoCambio = v; render(); preview() } });
   $('t-montaje').addEventListener('change', e => { S.params.incluirMontaje = e.target.checked ? 1 : 0; render(); preview() });
+  document.querySelectorAll('input.dto').forEach(i => i.addEventListener('input', e => { S.params[e.target.dataset.k] = Math.max(0, +e.target.value || 0); render() }));
+  $('d-aplica').addEventListener('change', e => { S.params.dtoAplica = e.target.value; render() });
   ['nombre', 'dir', 'fecha'].forEach(k => $('c-' + k).addEventListener('input', e => { S.cliente[k] = e.target.value; save() }));
-  $('b-copiar').addEventListener('click', () => {
-    const txt = documento();
-    navigator.clipboard.writeText(txt).then(() => toast('Presupuesto copiado'), () => { toast('No se pudo copiar en este navegador') });
-  });
+  $('b-copiar').addEventListener('click', () => { navigator.clipboard.writeText(documento()).then(() => toast('Presupuesto copiado'), () => toast('No se pudo copiar en este navegador')) });
   $('b-nuevo').addEventListener('click', () => { $('confirm-nuevo').hidden = false });
   $('b-no').addEventListener('click', () => { $('confirm-nuevo').hidden = true });
   $('b-si').addEventListener('click', () => { S = { cliente: { nombre: '', dir: '', fecha: new Date().toISOString().slice(0, 10) }, items: [], params: S.params, sel: null, nextId: 1 }; $('confirm-nuevo').hidden = true; initCliente(); salirEdicion(); render() });
@@ -799,8 +946,9 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   function initCliente() { $('c-nombre').value = S.cliente.nombre || ''; $('c-dir').value = S.cliente.dir || ''; $('c-fecha').value = S.cliente.fecha || '' }
 
   initCliente(); renderParams();
-  const first = S.items.find(i => i.id === S.sel) || { tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false };
-  cargarForm(Object.assign({}, first, { cod: '' })); $('f-cod').value = sugerirCodigo(first.tipologia);
+  const first = S.items.find(i => i.id === S.sel);
+  if (first) cargarForm(Object.assign({}, first)); else renderSecs();
+  $('f-cod').value = sugerirCodigo();
   preview(); render(); validar();
 })();
 </script>
