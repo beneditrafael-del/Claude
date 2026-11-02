@@ -78,6 +78,9 @@ td.num, th.num { text-align: right; white-space: nowrap }
 tr.sel td { background: var(--accent-soft) }
 .desc { font-size: .84rem; color: var(--muted) }
 tr.sin-borde td { border-bottom: 0 }
+fieldset.dtos { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px 12px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0 }
+fieldset.dtos legend { font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 4px }
+.grupo { grid-column: 1 / -1; font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-top: 6px }
 
 .totales { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-size: .95rem }
 .totales .num { text-align: right }
@@ -122,8 +125,9 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
         <label>Alto (mm)<input id="f-alto" type="number" min="300" step="5" value="1100"></label>
         <label class="span2">Color<select id="f-color"></select></label>
         <label class="span2">Vidrio<select id="f-vidrio"></select></label>
-        <label>Dto. renglón %<input id="f-dto" type="number" min="0" max="90" step="0.5" value="0"></label>
-        <label class="check" id="l-mosq"><input type="checkbox" id="f-mosq"> Con mosquitero</label>
+        <label>Dto. renglón %<input id="f-dto" type="number" min="0" max="100" step="0.5" value="0"></label>
+        <label>Factura<select id="f-iva"><option value="con">Con IVA</option><option value="sin">Sin IVA</option></select></label>
+        <label class="check span2" id="l-mosq"><input type="checkbox" id="f-mosq"> Con mosquitero</label>
         <div class="row span4">
           <button type="submit" class="prim" id="b-guardar">Agregar al presupuesto</button>
           <button type="button" id="b-cancelar" hidden>Cancelar edición</button>
@@ -146,10 +150,26 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
         <tbody id="t-items"></tbody>
       </table></div>
       <div class="minis">
-        <label>Dto. general %<input id="t-desc" type="number" min="0" max="90" step="0.5"></label>
         <label>Dólar vidrios ($)<input id="t-tc" type="number" min="1" step="5"></label>
         <label class="check" style="align-self:end"><input type="checkbox" id="t-montaje"> Incluir montaje</label>
       </div>
+      <fieldset class="dtos">
+        <legend>Descuentos</legend>
+        <div class="minis">
+          <label>Carpintería %<input class="dto" data-k="dtoCarp" id="d-carp" type="number" min="0" max="100" step="0.5"></label>
+          <label>Vidrios %<input class="dto" data-k="dtoVid" id="d-vid" type="number" min="0" max="100" step="0.5"></label>
+          <label>Montaje %<input class="dto" data-k="dtoMont" id="d-mont" type="number" min="0" max="100" step="0.5"></label>
+          <label>Mosquiteros %<input class="dto" data-k="dtoMosq" id="d-mosq" type="number" min="0" max="100" step="0.5"></label>
+          <label>General %<input class="dto" data-k="descuento" id="d-gen" type="number" min="0" max="100" step="0.5"></label>
+          <label>Monto fijo USD<input class="dto" data-k="dtoFijo" id="d-fijo" type="number" min="0" step="10"></label>
+        </div>
+        <label>El general y el monto fijo se aplican a<select id="d-aplica">
+          <option value="todo">Todo el presupuesto</option>
+          <option value="sin">Solo lo que va sin IVA</option>
+          <option value="con">Solo lo que va con IVA</option>
+        </select></label>
+        <p class="muted" style="margin:0"><small>Cada abertura tiene además su propio descuento y se marca con IVA o sin IVA desde el formulario.</small></p>
+      </fieldset>
       <div class="totales" id="t-tot"></div>
       <div class="row">
         <button type="button" class="prim" id="b-copiar">Copiar presupuesto</button>
@@ -229,11 +249,11 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   function leerForm() {
     return { tipologia: $('f-tip').value, cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
       ancho: Math.max(300, Math.round(+$('f-ancho').value || 0)), alto: Math.max(300, Math.round(+$('f-alto').value || 0)),
-      color: $('f-color').value, vidrio: $('f-vidrio').value, mosquitero: $('f-mosq').checked, descuento: Math.min(90, Math.max(0, +$('f-dto').value || 0)) };
+      color: $('f-color').value, vidrio: $('f-vidrio').value, mosquitero: $('f-mosq').checked, descuento: Math.min(100, Math.max(0, +$('f-dto').value || 0)), iva: $('f-iva').value };
   }
   function cargarForm(it) {
     $('f-tip').value = it.tipologia; $('f-cod').value = it.cod || ''; $('f-cant').value = it.cantidad;
-    $('f-ancho').value = it.ancho; $('f-alto').value = it.alto; $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-mosq').checked = !!it.mosquitero; $('f-dto').value = it.descuento || 0;
+    $('f-ancho').value = it.ancho; $('f-alto').value = it.alto; $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-mosq').checked = !!it.mosquitero; $('f-dto').value = it.descuento || 0; $('f-iva').value = it.iva || 'con';
   }
   function sugerirCodigo(tip) { const pre = M.TIPOLOGIAS[tip].prefijo; let n = 1; while (S.items.some(i => i.cod === pre + n)) n++; return pre + n }
   const chip = t => M.TIPOLOGIAS[t].exacto ? '<span class="chip">Igual a Hetmo</span>' : '<span class="chip warn">Aproximado</span>';
@@ -300,28 +320,33 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     else tb.innerHTML = S.items.map(it => {
       const p = M.precio(it, PP);
       const cl = it.id === S.sel ? 'sel' : '';
-      return `<tr class="${cl} sin-borde"><td><strong>${it.cod || '—'}</strong> ${M.TIPOLOGIAS[it.tipologia].exacto ? '' : '<span class="chip warn">aprox.</span>'}</td>
+      return `<tr class="${cl} sin-borde"><td><strong>${it.cod || '—'}</strong> ${M.TIPOLOGIAS[it.tipologia].exacto ? '' : '<span class="chip warn">aprox.</span>'} ${it.iva === 'sin' ? '<span class="chip">sin IVA</span>' : ''}</td>
         <td class="num">${it.cantidad}</td><td class="mono" style="white-space:nowrap">${it.ancho} × ${it.alto}</td>
         <td class="num">${fmt(p.unitario * (1 - (it.descuento || 0) / 100))}${it.descuento ? `<div class="desc">−${it.descuento}% de ${fmt(p.unitario)}</div>` : ''}</td><td class="num">${fmt(p.unitario * (1 - (it.descuento || 0) / 100) * it.cantidad)}</td>
         <td style="white-space:nowrap"><button class="link" data-ed="${it.id}">Editar</button><button class="link" data-dup="${it.id}">Duplicar</button><button class="link del" data-del="${it.id}">Quitar</button></td></tr><tr class="${cl}"><td colspan="6" class="desc" style="padding-top:0">${M.descripcion(it)}</td></tr>`;
     }).join('');
     const uds = S.items.reduce((s, i) => s + i.cantidad, 0);
     $('pres-cant').textContent = uds ? `${uds} unidad${uds > 1 ? 'es' : ''}` : '';
-    $('t-desc').value = PP.descuento; $('t-tc').value = PP.tipoCambio; $('t-montaje').checked = !!PP.incluirMontaje;
+    $('t-tc').value = PP.tipoCambio; $('t-montaje').checked = !!PP.incluirMontaje; $('d-aplica').value = PP.dtoAplica;
+    document.querySelectorAll('input.dto').forEach(i => { if (document.activeElement !== i) i.value = PP[i.dataset.k] || '' });
     const T = M.totales(S.items, PP);
-    $('t-tot').innerHTML = `
-      ${T.lista - T.total > 0.005 ? `<span>Precio Hetmo</span><span class="num">USD ${fmt(T.lista)}</span>` : ''}
-      ${T.lista - T.subtotal > 0.005 ? `<span>Dto. por renglón</span><span class="num">− USD ${fmt(T.lista - T.subtotal)}</span>` : ''}
-      ${PP.descuento ? `<span>Dto. general ${PP.descuento}%</span><span class="num">− USD ${fmt(T.descuento)}</span>` : ''}
-      <span class="big">Total</span><span class="num big">USD ${fmt(T.total)}</span>
+    const L = (t, v, cls) => v > 0.005 ? `<span class="${cls || ''}">${t}</span><span class="num ${cls || ''}">${v < 0 ? '− ' : ''}USD ${fmt(Math.abs(v))}</span>` : '';
+    const bloque = (titulo, g, conIva) => `<span class="grupo">${titulo}</span>
+      ${L('Precio Hetmo', g.lista)}
+      ${g.dtoRenglon > 0.005 ? `<span>Dto. por renglón</span><span class="num">− USD ${fmt(g.dtoRenglon)}</span>` : ''}
+      ${g.dtoRubros > 0.005 ? `<span>Dto. por rubro</span><span class="num">− USD ${fmt(g.dtoRubros)}</span>` : ''}
+      ${g.dtoGeneral > 0.005 ? `<span>Dto. general</span><span class="num">− USD ${fmt(g.dtoGeneral)}</span>` : ''}
+      <span><strong>Subtotal${conIva ? ' sin IVA' : ''}</strong></span><span class="num"><strong>USD ${fmt(g.total)}</strong></span>
+      ${conIva ? `<span>IVA ${PP.iva}%</span><span class="num">USD ${fmt(g.iva)}</span><span><strong>Total con IVA</strong></span><span class="num"><strong>USD ${fmt(g.totalFinal)}</strong></span>` : ''}`;
+    $('t-tot').innerHTML = (T.hayCon ? bloque(T.haySin ? 'Con IVA' : 'Presupuesto', T.grupos.con, true) : '') + (T.haySin ? bloque('Sin IVA', T.grupos.sin, false) : '') + `
+      <span class="sep"></span>
+      <span class="big">A pagar</span><span class="num big">USD ${fmt(T.totalPagar)}</span>
       <span class="muted">Carpintería</span><span class="num muted">USD ${fmt(T.carpinteria)}</span>
       <span class="muted">Vidrios</span><span class="num muted">USD ${fmt(T.vidrios)}</span>
-      ${T.montaje ? `<span class="muted">Montaje</span><span class="num muted">USD ${fmt(T.montaje)}</span>` : ''}
-      ${T.mosq ? `<span class="muted">Mosquiteros (estimado)</span><span class="num muted">USD ${fmt(T.mosq)}</span>` : ''}
-      <span class="sep"></span>
-      <span>IVA ${PP.iva}%</span><span class="num">USD ${fmt(T.iva)}</span>
-      <span><strong>Total con IVA</strong></span><span class="num"><strong>USD ${fmt(T.totalIva)}</strong></span>
-      <span class="muted">Costo de compra total</span><span class="num muted">USD ${fmt(T.compra)}</span>`;
+      ${T.montaje > 0.005 ? `<span class="muted">Montaje</span><span class="num muted">USD ${fmt(T.montaje)}</span>` : ''}
+      ${T.mosq > 0.005 ? `<span class="muted">Mosquiteros (estimado)</span><span class="num muted">USD ${fmt(T.mosq)}</span>` : ''}
+      <span class="muted">Costo de compra</span><span class="num muted">USD ${fmt(T.compra)}</span>
+      <span class="muted">Margen sobre costo</span><span class="num muted">USD ${fmt(T.total - T.compra)}</span>`;
     renderHetmo(); save();
   }
 
@@ -334,10 +359,17 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       const u = p.unitario * (1 - (it.descuento || 0) / 100);
       s += `${it.cod || ''}   Uds. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(u)}   Total ${fmt(u * it.cantidad)}\n${M.descripcion(it)}\n\n`;
     }
-    if (PP.descuento) s += `Sub-total : USD ${fmt(T.subtotal)}\nDescuento ${PP.descuento}% : USD ${fmt(T.descuento)}\n`;
-    s += `Total : USD ${fmt(T.total)} + I.V.A.\n\nCarpintería : USD ${fmt(T.carpinteria)}\nVidrios : USD ${fmt(T.vidrios)}\n`;
-    if (T.montaje) s += `Montaje : USD ${fmt(T.montaje)}\n`;
-    if (T.mosq) s += `Mosquiteros : USD ${fmt(T.mosq)}\n`;
+    const G = T.grupos, linea = (t, v) => v > 0.005 ? `${t} : USD ${fmt(v)}\n` : '';
+    const bloque = (titulo, g, conIva) => {
+      let t = titulo ? `${titulo}\n` : '';
+      if (g.dtoRenglon + g.dtoRubros + g.dtoGeneral > 0.005) t += linea('Sub-total', g.lista - g.dtoRenglon) + linea('Descuento', g.dtoRubros + g.dtoGeneral);
+      t += conIva ? `Total : USD ${fmt(g.total)} + I.V.A. (USD ${fmt(g.iva)}) = USD ${fmt(g.totalFinal)}\n\n` : `Total : USD ${fmt(g.total)}\n\n`;
+      return t;
+    };
+    if (T.hayCon) s += bloque(T.haySin ? 'CON IVA' : '', G.con, true);
+    if (T.haySin) s += bloque('SIN IVA', G.sin, false);
+    if (T.hayCon && T.haySin) s += `TOTAL A PAGAR : USD ${fmt(T.totalPagar)}\n\n`;
+    s += linea('Carpintería', T.carpinteria) + linea('Vidrios', T.vidrios) + linea('Montaje', T.montaje) + linea('Mosquiteros', T.mosq);
     s += `\nForma de pago 60% adelanto, 40% a contraentrega y colocación. Plazo de entrega en color Blanco 60/80 días - Color 80/110 días. Precio del dolar tipo vendedor del Banco Nación del día de pago.\nEn caso de ser necesario IZAJE será cotizado aparte.`;
     return s;
   }
@@ -372,7 +404,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   }
 
   // eventos
-  ['f-tip', 'f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-mosq', 'f-dto'].forEach(id => $(id).addEventListener('input', preview));
+  ['f-tip', 'f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-mosq', 'f-dto', 'f-iva'].forEach(id => $(id).addEventListener('input', preview));
   $('f-tip').addEventListener('change', () => { if (!editId) $('f-cod').value = sugerirCodigo($('f-tip').value) });
   $('f-item').addEventListener('submit', e => {
     e.preventDefault(); const it = leerForm(); if (!it.cod) it.cod = sugerirCodigo(it.tipologia);
@@ -388,7 +420,8 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     if (b.dataset.dup) { const it = S.items.find(i => i.id === +b.dataset.dup); const n = Object.assign({}, it, { id: S.nextId++, cod: sugerirCodigo(it.tipologia) }); S.items.push(n); S.sel = n.id; render(); toast('Duplicada como ' + n.cod) }
     if (b.dataset.del) { S.items = S.items.filter(i => i.id !== +b.dataset.del); if (editId === +b.dataset.del) salirEdicion(); render() }
   });
-  $('t-desc').addEventListener('input', e => { S.params.descuento = Math.max(0, +e.target.value || 0); render(); preview() });
+  document.querySelectorAll('input.dto').forEach(i => i.addEventListener('input', e => { S.params[e.target.dataset.k] = Math.max(0, +e.target.value || 0); render() }));
+  $('d-aplica').addEventListener('change', e => { S.params.dtoAplica = e.target.value; render() });
   $('t-tc').addEventListener('input', e => { const v = +e.target.value; if (v > 0) { S.params.tipoCambio = v; render(); preview() } });
   $('t-montaje').addEventListener('change', e => { S.params.incluirMontaje = e.target.checked ? 1 : 0; render(); preview() });
   ['nombre', 'dir', 'fecha'].forEach(k => $('c-' + k).addEventListener('input', e => { S.cliente[k] = e.target.value; save() }));

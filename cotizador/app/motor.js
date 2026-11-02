@@ -52,7 +52,7 @@
     montajeMl: 17,             // montaje: USD por metro de perímetro, va en Venta 1
     incluirMontaje: 1,         // 1 = el precio incluye montaje como en Hetmo
     recargoHerrajeGU: 1.1466,  // Hetmo valúa GU 14,66% arriba de la lista de almacén
-    descuento: 0, iva: 21,
+    descuento: 0, dtoFijo: 0, dtoAplica: 'todo', dtoCarp: 0, dtoVid: 0, dtoMont: 0, dtoMosq: 0, iva: 21,
   };
 
   // Precios por metro o por unidad (USD) tomados del despiece de Hetmo; color: tabla de almacén.
@@ -308,20 +308,45 @@
     return d + `. medidas : ${item.ancho}x${item.alto}`;
   }
 
+  // Descuentos: por renglón (item.descuento), por rubro (P.dtoCarp, dtoVid, dtoMont, dtoMosq),
+  // y general en % (P.descuento) o monto fijo (P.dtoFijo), aplicado a 'todo', 'sin' IVA o 'con' IVA (P.dtoAplica).
+  // Cada renglón va "con IVA" (por defecto) o "sin IVA" (item.iva === 'sin'); el IVA se suma solo a lo que va con IVA.
   function totales(items, P) {
     P = Object.assign({}, PARAMETROS_BASE, P || {});
-    const T = { lista: 0, subtotal: 0, carpinteria: 0, vidrios: 0, montaje: 0, mosq: 0, unidades: 0, compra: 0 };
+    const nuevo = () => ({ lista: 0, dtoRenglon: 0, dtoRubros: 0, neto: 0, dtoGeneral: 0, total: 0, iva: 0, totalFinal: 0, carpinteria: 0, vidrios: 0, montaje: 0, mosq: 0, unidades: 0 });
+    const G = { con: nuevo(), sin: nuevo() };
+    const rub = { carpinteria: P.dtoCarp || 0, vidrios: P.dtoVid || 0, montaje: P.dtoMont || 0, mosq: P.dtoMosq || 0 };
+    let compra = 0;
     for (const it of items) {
-      const p = precio(it, P), q = (it.cantidad || 1) * (1 - (it.descuento || 0) / 100);
-      T.lista += p.unitario * (it.cantidad || 1);
-      T.subtotal += p.unitario * q; T.carpinteria += p.carpinteria * q; T.vidrios += p.vidrios * q; T.montaje += p.montaje * q; T.mosq += p.mosq * q; T.unidades += it.cantidad || 1;
-      T.compra += p.hetmo.totalCompra * q;
+      const p = precio(it, P), n = it.cantidad || 1, fr = 1 - (it.descuento || 0) / 100;
+      const g = G[it.iva === 'sin' ? 'sin' : 'con'];
+      g.lista += p.unitario * n; g.unidades += n; compra += p.hetmo.totalCompra * n;
+      for (const k of Object.keys(rub)) {
+        const bruto = p[k] * n, trasRenglon = bruto * fr, neto = trasRenglon * (1 - rub[k] / 100);
+        g.dtoRenglon += bruto - trasRenglon; g.dtoRubros += trasRenglon - neto; g.neto += neto; g[k] += neto;
+      }
     }
-    const f = 1 - P.descuento / 100;
-    T.descuento = T.subtotal * (1 - f); T.total = T.subtotal * f;
-    for (const k of ['carpinteria', 'vidrios', 'montaje', 'mosq']) T[k] *= f;
-    T.iva = T.total * P.iva / 100; T.totalIva = T.total + T.iva;
-    return T;
+    const aplica = P.dtoAplica || 'todo';
+    const objetivo = ['con', 'sin'].filter(k => aplica === 'todo' || aplica === k);
+    const baseObj = objetivo.reduce((s, k) => s + G[k].neto, 0);
+    for (const k of ['con', 'sin']) {
+      const g = G[k];
+      if (objetivo.includes(k)) {
+        g.dtoGeneral = g.neto * (P.descuento || 0) / 100;
+        if (P.dtoFijo && baseObj > 0) g.dtoGeneral += P.dtoFijo * g.neto / baseObj;
+        g.dtoGeneral = Math.min(g.dtoGeneral, g.neto);
+      }
+      g.total = g.neto - g.dtoGeneral;
+      const f = g.neto ? g.total / g.neto : 1;
+      for (const c of Object.keys(rub)) g[c] *= f;
+      g.iva = k === 'con' ? g.total * P.iva / 100 : 0;
+      g.totalFinal = g.total + g.iva;
+    }
+    const sum = c => G.con[c] + G.sin[c];
+    return { grupos: G, lista: sum('lista'), dtoRenglon: sum('dtoRenglon'), dtoRubros: sum('dtoRubros'), dtoGeneral: sum('dtoGeneral'),
+      total: sum('total'), iva: G.con.iva, totalPagar: G.con.totalFinal + G.sin.totalFinal, compra,
+      carpinteria: sum('carpinteria'), vidrios: sum('vidrios'), montaje: sum('montaje'), mosq: sum('mosq'), unidades: sum('unidades'),
+      hayCon: G.con.unidades > 0, haySin: G.sin.unidades > 0 };
   }
 
   const api = { TIPOLOGIAS, COLORES, VIDRIOS, PARAMETROS_BASE, ART, hetmo, precio, precioWMaker, descripcion, totales };
