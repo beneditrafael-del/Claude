@@ -87,3 +87,52 @@ Sale del PDF "Articulos de almacen con precios HETMO" (359 páginas, unos 20.000
   - Jet Black: ×1,82.
 - **Vidrios:** el precio parece estar en **pesos por m²**. Ejemplos: 4/12/4 incoloro 34.344; 3+3/9/4 72.095; float 4 mm 17.172.
 - **Herrajes** (GU, ROTO, VBH, REZE, VORNE, Häusen, Magnum): precio por unidad.
+
+## Motor Hetmo (`app/motor.js`)
+Sale de las capturas de las 4 ventanas de prueba (`capturas/hetmo_prueba/`), cargadas con el dólar a $1540. El cotizador reproduce las 4 al centavo.
+
+| Ventana | Ficha | Compra | Venta 1 | Venta |
+|---|---|---|---|---|
+| V1 corrediza 1500×1100 blanca | 175 Prime 74 2 guías | 389,25 | 488,89 | 757,77 |
+| V4 la misma en golden oak | 175 | 455,43 | 559,11 | 866,63 |
+| V2 abrir 600×1000 blanca | 108 DC 66-85 | 207,82 | 267,32 | 414,35 |
+| V3 paño fijo 1000×1000 blanco | DC 58-66 | 144,00 | 216,93 | 336,25 |
+
+**Reglas que aplica Hetmo:**
+- **De Compra a Venta 1:**
+  - Los artículos por metro suben ×1,07: perfiles, refuerzos, tapajuntas y cámara.
+  - Los artículos por unidad quedan igual: herrajes, accesorios, tornillos, vidrio por m² y coliza.
+  - El montaje es USD 17 por metro de perímetro y aparece recién en Venta 1.
+- **Venta** = Venta 1 × 1,55.
+- **Vidrio:**
+  - Cada lado se redondea hacia arriba a 10 mm y se cobra un mínimo de 0,5 m².
+  - Se suma la cámara (C12, C9) por metro de perímetro.
+  - Los pesos se pasan a dólares con el tipo de cambio cargado.
+- **Acristalamiento:** USD 2,9165 por vidrio.
+- **Herraje GU:** Hetmo lo valúa ×1,1466 sobre la lista de almacén. Las cremonas se eligen por rango con el alto de la hoja menos 100.
+- **Tornillos TR-16:** uno cada 250 mm de refuerzo (marco DZ: cada 300). En color, uno cada 170 mm en hoja y cada 200 en marco.
+- **Tapajuntas 91305:**
+  - Clips por lado: el máximo entre 3 y ancho/250 redondeado hacia abajo.
+  - Tornillos VR-T-01: largo/350 redondeado, por lado.
+- **Fabricación:** valor calibrado por tipología, que escala con el perímetro. Es el único supuesto que queda en las 3 fichas verificadas.
+
+**Cortes:**
+- **Prime 74:**
+  - Marco W+6 / H+6.
+  - Hoja W/2−5 / H−90.
+  - Vidrio W/2−131 × H−216.
+  - Guía W−112.
+  - Tapa, encuentro y tapa de encuentro: H−98.
+  - Refuerzo de hoja: hoja−130. Refuerzo de marco: W−88 / H−88.
+- **DC 66-85:**
+  - Marco W+6 / H+6.
+  - Hoja W−74 / H−74.
+  - Vidrio W−222 × H−222.
+  - Refuerzo de hoja: hoja−160.
+  - Refuerzo de marco: W−116 / H−116.
+  - Tapa canal: H−120.
+- **Paño fijo DC:** marco W+6 / H+6, vidrio W−104 × H−104.
+- **Tapajuntas:** W+70 / H+70.
+- **Contravidrio:** lado del vidrio + 8.
+
+**Aproximadas (sin captura de Hetmo):** corrediza de 3 hojas, de abrir de 2 hojas, oscilobatientes, proyectante, puertas y mosquiteros.

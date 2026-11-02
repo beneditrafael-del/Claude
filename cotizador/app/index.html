@@ -76,7 +76,8 @@ th { font: 600 .74rem var(--f-body); text-transform: uppercase; letter-spacing: 
 td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top }
 td.num, th.num { text-align: right; white-space: nowrap }
 tr.sel td { background: var(--accent-soft) }
-.desc { font-size: .84rem; color: var(--muted); margin-top: 2px }
+.desc { font-size: .84rem; color: var(--muted) }
+tr.sin-borde td { border-bottom: 0 }
 
 .totales { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; font-size: .95rem }
 .totales .num { text-align: right }
@@ -100,7 +101,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
 <div class="wrap">
   <header class="top">
     <div class="marca">
-      <span class="lema">Aberturas GH · PVC línea Tecnocom / Muchtek</span>
+      <span class="lema">Aberturas GH · PVC Muchtek · cálculo Hetmo</span>
       <h1>Cotizador GH Aberturas</h1>
     </div>
     <div class="cliente">
@@ -115,8 +116,8 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       <div class="cardhead"><h2 id="h-nueva">Abertura</h2><span class="chip" id="modo-chip">Nueva</span></div>
       <form class="form" id="f-item" autocomplete="off">
         <label class="span2">Tipología<select id="f-tip"></select></label>
-        <label>Tipo / posición<input id="f-cod" placeholder="VC1"></label>
-        <label>Cantidad<input id="f-cant" type="number" min="1" step="1" value="1"></label>
+        <label>Modelo<input id="f-cod" placeholder="V1"></label>
+        <label>Uds.<input id="f-cant" type="number" min="1" step="1" value="1"></label>
         <label>Ancho (mm)<input id="f-ancho" type="number" min="300" step="5" value="1500"></label>
         <label>Alto (mm)<input id="f-alto" type="number" min="300" step="5" value="1100"></label>
         <label class="span2">Color<select id="f-color"></select></label>
@@ -130,9 +131,9 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
       <div class="plano">
         <svg id="dibujo" viewBox="0 0 300 260" role="img" aria-label="Plano de la abertura"></svg>
         <div>
-          <div class="row" style="justify-content:space-between"><strong id="p-titulo">Precio de lista</strong><span class="muted"><small>por unidad, sin descuento</small></span></div>
+          <div class="row" style="justify-content:space-between"><strong>Precio por unidad</strong><span id="p-chip"></span></div>
           <div class="desg" id="p-desg"></div>
-          <p class="muted" style="margin:.6em 0 0"><small>Calibrado con 80 ventanas reales de WMaker. La mitad dan a menos del 3,7% del precio real.</small></p>
+          <p class="muted" style="margin:.6em 0 0" id="p-nota"></p>
         </div>
       </div>
     </section>
@@ -140,13 +141,13 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     <section class="card" aria-labelledby="h-pres">
       <div class="cardhead"><h2 id="h-pres">Presupuesto</h2><span class="muted" id="pres-cant"></span></div>
       <div class="tabla"><table>
-        <thead><tr><th>Tipo</th><th class="num">Cant.</th><th>Medida</th><th class="num">USD x U</th><th class="num">Total</th><th></th></tr></thead>
+        <thead><tr><th>Modelo</th><th class="num">Uds.</th><th>Medida</th><th class="num">USD x U</th><th class="num">Total</th><th></th></tr></thead>
         <tbody id="t-items"></tbody>
       </table></div>
       <div class="minis">
         <label>Descuento %<input id="t-desc" type="number" min="0" max="90" step="1"></label>
-        <label>Colocación USD<input id="t-coloc" type="number" min="0" step="10"></label>
-        <label>Contramarcos USD<input id="t-contra" type="number" min="0" step="10"></label>
+        <label>Dólar vidrios ($)<input id="t-tc" type="number" min="1" step="5"></label>
+        <label class="check" style="align-self:end"><input type="checkbox" id="t-montaje"> Incluir montaje</label>
       </div>
       <div class="totales" id="t-tot"></div>
       <div class="row">
@@ -157,23 +158,17 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     </section>
   </div>
 
-  <details class="card" id="d-doc">
-    <summary>Vista del presupuesto <span class="muted" style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400">formato WMaker, listo para pegar</span></summary>
-    <div class="in"><pre class="doc" id="doc"></pre></div>
-  </details>
-
-  <details class="card" id="d-hetmo">
-    <summary>Despiece y costo estilo Hetmo <span class="chip warn">Estimado: falta la ficha técnica</span></summary>
+  <details class="card" id="d-hetmo" open>
+    <summary>Análisis de importes y despiece <span id="h-chip"></span></summary>
     <div class="in">
-      <p class="muted" style="margin:0">Despiece armado con la lógica de cada tipología y los precios de la lista de almacén de Hetmo. Calcula igual que la pantalla "Análisis de importes": Compra → Venta 1 (perfiles y refuerzos +7%) → Venta (margen 55%). Las medidas de corte y la mano de obra son supuestos hasta tener las fichas reales.</p>
       <div class="row"><label style="flex:1 1 260px">Abertura<select id="h-item"></select></label></div>
       <div class="tabla"><table>
-        <thead><tr><th>Código</th><th>Artículo</th><th class="num">Cant.</th><th>Detalle</th><th class="num">Precio</th><th class="num">Importe</th></tr></thead>
-        <tbody id="h-det"></tbody>
+        <thead><tr><th>Partida</th><th class="num">Compra</th><th class="num">Venta 1</th><th class="num">%</th><th class="num">Venta</th></tr></thead>
+        <tbody id="h-res"></tbody>
       </table></div>
       <div class="tabla"><table>
-        <thead><tr><th>Partida</th><th class="num">Compra</th><th class="num">Venta 1</th><th class="num">Venta</th></tr></thead>
-        <tbody id="h-res"></tbody>
+        <thead><tr><th>Código</th><th>Artículo</th><th class="num">Uds.</th><th class="num">Corte</th><th>Detalle</th><th class="num">Unitario</th><th class="num">T-Comp</th></tr></thead>
+        <tbody id="h-det"></tbody>
       </table></div>
     </div>
   </details>
@@ -187,11 +182,14 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   </details>
 
   <details class="card" id="d-valid">
-    <summary>Control contra ventanas reales de WMaker <span class="muted" id="v-res" style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400"></span></summary>
-    <div class="in"><div class="tabla"><table>
-      <thead><tr><th>Código</th><th>Tipología</th><th>Medida</th><th>Color / vidrio</th><th class="num">Real</th><th class="num">Cotizador</th><th class="num">Dif.</th></tr></thead>
-      <tbody id="v-tab"></tbody>
-    </table></div></div>
+    <summary>Control contra Hetmo <span class="muted" id="v-res" style="text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400"></span></summary>
+    <div class="in">
+      <p class="muted" style="margin:0">Las 4 ventanas que se cargaron en Hetmo con el dólar a $1540. El cotizador las recalcula con ese mismo dólar.</p>
+      <div class="tabla"><table>
+        <thead><tr><th>Ventana</th><th class="num">Compra Hetmo</th><th class="num">Cotizador</th><th class="num">Venta Hetmo</th><th class="num">Cotizador</th><th class="num">Dif.</th></tr></thead>
+        <tbody id="v-tab"></tbody>
+      </table></div>
+    </div>
   </details>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -202,18 +200,21 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   const M = window.MotorGH;
   const $ = id => document.getElementById(id);
   const fmt = x => (x || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const KEY = 'gh-cotizador-v1';
+  const f3 = x => (x || 0).toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  const KEY = 'gh-cotizador-v2';
   const PARAM_LABELS = {
-    recargoColor: 'Recargo color foliado (×)', recargoBicolor: 'Recargo bicolor (×)', descuento: 'Descuento por defecto %', iva: 'IVA %',
-    colocacionBase: 'Colocación fija USD', colocacionM2: 'Colocación USD por m²', contramarcoMl: 'Contramarco USD por metro', redondeo: 'Redondeo colocación USD',
-    tipoCambio: 'Hetmo: dólar para vidrios ($)', mermaPerfiles: 'Hetmo: merma perfiles (×)', margen: 'Hetmo: margen tarifa %',
-    manoObraM2: 'Hetmo: mano de obra USD/m²', manoObraHoja: 'Hetmo: mano de obra USD/hoja', acristalamientoM2: 'Hetmo: acristalamiento USD/m²',
+    margen: 'Margen tarifa %', mermaLineal: 'Merma artículos por metro (×)', montajeMl: 'Montaje USD por metro de perímetro',
+    recargoHerrajeGU: 'Recargo herraje GU (×)', iva: 'IVA %',
   };
-
   const ejemplo = () => ({
-    cliente: { nombre: 'Ejemplo · Belu Urda', dir: 'CUBA', fecha: new Date().toISOString().slice(0, 10) },
-    items: [{ id: 1, cod: 'VC1', tipologia: 'corr2', ancho: 1610, alto: 1220, cantidad: 2, color: 'bic_grafito', vidrio: 'dvh', mosquitero: true }],
-    descuento: 40, coloc: null, contra: null, params: {}, sel: 1, nextId: 2,
+    cliente: { nombre: 'Ejemplo · ventanas de prueba Hetmo', dir: '', fecha: new Date().toISOString().slice(0, 10) },
+    items: [
+      { id: 1, cod: 'V1', tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
+      { id: 2, cod: 'V2', tipologia: 'abrir1', ancho: 600, alto: 1000, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
+      { id: 3, cod: 'V3', tipologia: 'pano', ancho: 1000, alto: 1000, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false },
+      { id: 4, cod: 'V4', tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'golden', vidrio: 'dvh', mosquitero: false },
+    ],
+    params: { tipoCambio: 1565 }, sel: 1, nextId: 5,
   });
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || ejemplo() } catch { S = ejemplo() }
@@ -221,32 +222,27 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch {} };
   let editId = null;
 
-  // ----- selects -----
-  const fill = (sel, obj) => { sel.innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.nombre}</option>`).join('') };
+  const fill = (sel, obj) => { sel.innerHTML = Object.entries(obj).map(([k, v]) => `<option value="${k}">${v.nombre}${obj === M.TIPOLOGIAS && !v.exacto ? " (aprox.)" : ""}</option>`).join('') };
   fill($('f-tip'), M.TIPOLOGIAS); fill($('f-color'), M.COLORES); fill($('f-vidrio'), M.VIDRIOS);
 
   function leerForm() {
     return { tipologia: $('f-tip').value, cod: $('f-cod').value.trim(), cantidad: Math.max(1, +$('f-cant').value || 1),
-      ancho: Math.max(100, +$('f-ancho').value || 0), alto: Math.max(100, +$('f-alto').value || 0),
+      ancho: Math.max(300, Math.round(+$('f-ancho').value || 0)), alto: Math.max(300, Math.round(+$('f-alto').value || 0)),
       color: $('f-color').value, vidrio: $('f-vidrio').value, mosquitero: $('f-mosq').checked };
   }
   function cargarForm(it) {
     $('f-tip').value = it.tipologia; $('f-cod').value = it.cod || ''; $('f-cant').value = it.cantidad;
     $('f-ancho').value = it.ancho; $('f-alto').value = it.alto; $('f-color').value = it.color; $('f-vidrio').value = it.vidrio; $('f-mosq').checked = !!it.mosquitero;
   }
-  function sugerirCodigo(tip) {
-    const pre = M.TIPOLOGIAS[tip].prefijo; let n = 1;
-    while (S.items.some(i => i.cod === pre + n)) n++;
-    return pre + n;
-  }
+  function sugerirCodigo(tip) { const pre = M.TIPOLOGIAS[tip].prefijo; let n = 1; while (S.items.some(i => i.cod === pre + n)) n++; return pre + n }
+  const chip = t => M.TIPOLOGIAS[t].exacto ? '<span class="chip">Igual a Hetmo</span>' : '<span class="chip warn">Aproximado</span>';
 
-  // ----- dibujo -----
   function dibujar(it) {
     const t = M.TIPOLOGIAS[it.tipologia];
     const maxW = 220, maxH = 200, k = Math.min(maxW / it.ancho, maxH / it.alto);
     const w = it.ancho * k, h = it.alto * k, x0 = 50 + (maxW - w) / 2, y0 = 14 + (maxH - h) / 2;
     const fr = 7, ink = 'var(--ink)', mut = 'var(--muted)', acc = 'var(--accent)';
-    const col = M.COLORES[it.color] || {}; const marco = col.foliado ? 'var(--wood)' : ink;
+    const marco = it.color && it.color !== 'blanco' ? 'var(--wood)' : ink;
     let s = `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="${marco}" stroke-width="3"/>`;
     const glass = (x, y, ww, hh) => `<rect x="${x}" y="${y}" width="${Math.max(ww, 1)}" height="${Math.max(hh, 1)}" fill="var(--accent-soft)" stroke="${mut}" stroke-width="1"/>`;
     const ix = x0 + fr, iy = y0 + fr, iw = w - 2 * fr, ih = h - 2 * fr;
@@ -270,7 +266,6 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
         }
       }
     }
-    // cotas
     const yb = y0 + h + 16, xl = x0 - 16;
     s += `<path d="M${x0} ${yb} H${x0 + w} M${x0} ${yb - 4} v8 M${x0 + w} ${yb - 4} v8" stroke="${mut}" stroke-width="1" fill="none"/>`;
     s += `<text x="${x0 + w / 2}" y="${yb + 14}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="${ink}">${it.ancho}</text>`;
@@ -280,146 +275,134 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   }
 
   function preview() {
-    const it = leerForm(); const t = M.TIPOLOGIAS[it.tipologia];
+    const it = leerForm(), t = M.TIPOLOGIAS[it.tipologia];
     $('l-mosq').hidden = !t.mosq;
     dibujar(it);
-    const p = M.precioLista(it, P());
-    const rows = [['Básico', p.basico], ['Vidrio', p.vidrio]];
-    if (t.mosq && it.mosquitero) rows.push(['Mosquitero', p.mosq]);
+    const p = M.precio(it, P()), wm = M.precioWMaker(it);
+    const rows = [['Carpintería', p.carpinteria], ['Vidrios', p.vidrios]];
+    if (P().incluirMontaje) rows.push(['Montaje', p.montaje]);
+    if (p.mosq) rows.push(['Mosquitero (estimado)', p.mosq]);
+    $('p-chip').innerHTML = chip(it.tipologia);
     $('p-desg').innerHTML = rows.map(([a, b]) => `<span>${a}</span><span class="num">${fmt(b)}</span>`).join('') +
       `<span class="tot">USD x U</span><span class="num tot">${fmt(p.unitario)}</span>` +
       (it.cantidad > 1 ? `<span class="muted">× ${it.cantidad}</span><span class="num muted">${fmt(p.unitario * it.cantidad)}</span>` : '') +
-      `<span class="muted">Con ${P().descuento === S.descuento ? '' : ''}${S.descuento}% dto.</span><span class="num muted">${fmt(p.unitario * it.cantidad * (1 - S.descuento / 100))}</span>`;
+      `<span class="muted">Costo de compra</span><span class="num muted">${fmt(p.hetmo.totalCompra)}</span>` +
+      `<span class="muted">Referencia WMaker</span><span class="num muted">${fmt(wm.unitario)}</span>`;
+    $('p-nota').innerHTML = `<small>Ficha ${t.ficha}. ${t.exacto ? 'Calcula igual que Hetmo.' : 'Armada por analogía con las fichas verificadas: tomala como estimación.'}</small>`;
   }
 
-  // ----- presupuesto -----
   function render() {
-    const PP = Object.assign(P(), { descuento: S.descuento });
+    const PP = P();
     const tb = $('t-items');
     if (!S.items.length) tb.innerHTML = `<tr><td colspan="6" class="muted">Todavía no hay aberturas. Cargá una a la izquierda y tocá "Agregar al presupuesto".</td></tr>`;
     else tb.innerHTML = S.items.map(it => {
-      const p = M.precioLista(it, PP);
-      return `<tr class="${it.id === S.sel ? 'sel' : ''}"><td><strong>${it.cod || '—'}</strong><div class="desc">${M.descripcionWMaker(it)}</div></td>
+      const p = M.precio(it, PP);
+      const cl = it.id === S.sel ? 'sel' : '';
+      return `<tr class="${cl} sin-borde"><td><strong>${it.cod || '—'}</strong> ${M.TIPOLOGIAS[it.tipologia].exacto ? '' : '<span class="chip warn">aprox.</span>'}</td>
         <td class="num">${it.cantidad}</td><td class="mono" style="white-space:nowrap">${it.ancho} × ${it.alto}</td>
         <td class="num">${fmt(p.unitario)}</td><td class="num">${fmt(p.unitario * it.cantidad)}</td>
-        <td style="white-space:nowrap"><button class="link" data-ed="${it.id}">Editar</button><button class="link" data-dup="${it.id}">Duplicar</button><button class="link del" data-del="${it.id}">Quitar</button></td></tr>`;
+        <td style="white-space:nowrap"><button class="link" data-ed="${it.id}">Editar</button><button class="link" data-dup="${it.id}">Duplicar</button><button class="link del" data-del="${it.id}">Quitar</button></td></tr><tr class="${cl}"><td colspan="6" class="desc" style="padding-top:0">${M.descripcion(it)}</td></tr>`;
     }).join('');
     const uds = S.items.reduce((s, i) => s + i.cantidad, 0);
     $('pres-cant').textContent = uds ? `${uds} unidad${uds > 1 ? 'es' : ''}` : '';
+    $('t-desc').value = PP.descuento; $('t-tc').value = PP.tipoCambio; $('t-montaje').checked = !!PP.incluirMontaje;
     const T = M.totales(S.items, PP);
-    const coloc = S.coloc ?? T.colocacionSugerida, contra = S.contra ?? T.contramarcosSugeridos;
-    $('t-desc').value = S.descuento;
-    $('t-coloc').value = coloc; $('t-coloc').placeholder = T.colocacionSugerida;
-    $('t-contra').value = contra; $('t-contra').placeholder = T.contramarcosSugeridos;
-    const final = T.total + (+coloc || 0) + (+contra || 0);
     $('t-tot').innerHTML = `
-      <span>Sub-total</span><span class="num">USD ${fmt(T.subtotal)}</span>
-      ${S.descuento ? `<span>Descuento ${S.descuento.toFixed(2)}%</span><span class="num">− USD ${fmt(T.descuento)}</span>` : ''}
+      ${PP.descuento ? `<span>Sub-total</span><span class="num">USD ${fmt(T.subtotal)}</span><span>Descuento ${PP.descuento}%</span><span class="num">− USD ${fmt(T.descuento)}</span>` : ''}
       <span class="big">Total</span><span class="num big">USD ${fmt(T.total)}</span>
-      <span class="muted">Básico</span><span class="num muted">USD ${fmt(T.basico)}</span>
+      <span class="muted">Carpintería</span><span class="num muted">USD ${fmt(T.carpinteria)}</span>
       <span class="muted">Vidrios</span><span class="num muted">USD ${fmt(T.vidrios)}</span>
-      ${T.mosquiteros ? `<span class="muted">Mosquiteros</span><span class="num muted">USD ${fmt(T.mosquiteros)}</span>` : ''}
+      ${T.montaje ? `<span class="muted">Montaje</span><span class="num muted">USD ${fmt(T.montaje)}</span>` : ''}
+      ${T.mosq ? `<span class="muted">Mosquiteros (estimado)</span><span class="num muted">USD ${fmt(T.mosq)}</span>` : ''}
       <span class="sep"></span>
-      <span>Con colocación ${S.coloc == null ? '(sugerida)' : ''} y contramarcos ${S.contra == null ? '(sugeridos)' : ''}</span><span class="num"><strong>USD ${fmt(final)}</strong> + IVA</span>`;
-    $('doc').textContent = documento(PP, T, coloc, contra, final);
+      <span>IVA ${PP.iva}%</span><span class="num">USD ${fmt(T.iva)}</span>
+      <span><strong>Total con IVA</strong></span><span class="num"><strong>USD ${fmt(T.totalIva)}</strong></span>
+      <span class="muted">Costo de compra total</span><span class="num muted">USD ${fmt(T.compra)}</span>`;
     renderHetmo(); save();
   }
 
-  function documento(PP, T, coloc, contra, final) {
-    const c = S.cliente, f = c.fecha ? c.fecha.split('-').reverse().map((x, i) => i === 0 ? +x : i === 1 ? +x : x).join('/') : '';
-    let s = `GH Aberturas S.R.L. · VIVIR MEJOR ES POSIBLE\nFecha: ${f}\nSres. ${c.nombre || ''}   Dir. ${c.dir || ''}\n\n`;
+  function documento() {
+    const PP = P(), T = M.totales(S.items, PP), c = S.cliente;
+    const f = c.fecha ? c.fecha.split('-').reverse().join('/') : '';
+    let s = `GH Aberturas S.R.L.\nFecha: ${f}\nSres. ${c.nombre || ''}   Dir. ${c.dir || ''}\n\n`;
     for (const it of S.items) {
-      const p = M.precioLista(it, PP);
-      s += `Tipo ${it.cod || ''}   Cant. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(p.unitario)}   Total ${fmt(p.unitario * it.cantidad)}\n`;
-      s += `Tipo ${it.cod || ''} (${it.ancho} x ${it.alto} mm): ${M.descripcionWMaker(it)}\n\n`;
+      const p = M.precio(it, PP);
+      s += `${it.cod || ''}   Uds. ${it.cantidad}   Medida ${it.ancho} x ${it.alto}   USDxU ${fmt(p.unitario)}   Total ${fmt(p.unitario * it.cantidad)}\n${M.descripcion(it)}\n\n`;
     }
-    if (S.descuento) s += `Sub-total : USD ${fmt(T.subtotal)}\nDescuento ${S.descuento.toFixed(2)}% : USD ${fmt(T.descuento)}\n`;
-    s += `Total : USD ${fmt(T.total)}\n\nBásico : USD ${fmt(T.basico)}\nVidrios : USD ${fmt(T.vidrios)}\n`;
-    if (T.mosquiteros) s += `Mosquiteros: USD ${fmt(T.mosquiteros)}\n`;
-    s += `\nNota : Colocacion USD ${fmt(+coloc || 0)} + contramarcos USD ${fmt(+contra || 0)} = USD ${fmt(final)} + I.V.A\n\n`;
-    s += `Forma de pago 60% adelanto, 40% a contraentrega y colocación. Plazo de entrega en color Blanco 60/80 días - Color 80/110 días. Precio del dolar tipo vendedor del Banco Nación del día de pago.\nEn caso de ser necesario IZAJE será cotizado aparte.`;
+    if (PP.descuento) s += `Sub-total : USD ${fmt(T.subtotal)}\nDescuento ${PP.descuento}% : USD ${fmt(T.descuento)}\n`;
+    s += `Total : USD ${fmt(T.total)} + I.V.A.\n\nCarpintería : USD ${fmt(T.carpinteria)}\nVidrios : USD ${fmt(T.vidrios)}\n`;
+    if (T.montaje) s += `Montaje : USD ${fmt(T.montaje)}\n`;
+    if (T.mosq) s += `Mosquiteros : USD ${fmt(T.mosq)}\n`;
+    s += `\nForma de pago 60% adelanto, 40% a contraentrega y colocación. Plazo de entrega en color Blanco 60/80 días - Color 80/110 días. Precio del dolar tipo vendedor del Banco Nación del día de pago.\nEn caso de ser necesario IZAJE será cotizado aparte.`;
     return s;
   }
 
   function renderHetmo() {
     const sel = $('h-item'); const prev = +sel.value || S.sel;
-    sel.innerHTML = S.items.map(i => `<option value="${i.id}">${i.cod || '—'} · ${M.TIPOLOGIAS[i.tipologia].nombre} ${i.ancho}×${i.alto}</option>`).join('');
+    sel.innerHTML = S.items.map(i => `<option value="${i.id}">${i.cod || '—'} · ${M.TIPOLOGIAS[i.tipologia].nombre} ${i.ancho}×${i.alto} ${M.COLORES[i.color].nombre}</option>`).join('');
     const it = S.items.find(i => i.id === prev) || S.items[0];
-    if (!it) { $('h-det').innerHTML = `<tr><td colspan="6" class="muted">Agregá una abertura al presupuesto para ver su despiece.</td></tr>`; $('h-res').innerHTML = ''; return }
-    sel.value = it.id;
-    const h = M.despieceHetmo(it, P()), PP = P();
-    $('h-det').innerHTML = h.detalle.map(d => `<tr><td class="mono">${d.cod}</td><td>${d.desc}</td><td class="num">${d.unidad === 'u' ? d.cant : d.cant.toFixed(2)} ${d.unidad}</td><td class="muted">${d.detalle}</td><td class="num">${fmt(d.precio)}</td><td class="num">${fmt(d.importe)}</td></tr>`).join('');
-    const G = h.grupos, mer = PP.mermaPerfiles, mg = 1 + PP.margen / 100;
-    const filas = [['Perfiles', G.perfiles, mer], ['Refuerzos', G.refuerzos, mer], ['Juntas', G.juntas, 1], ['Tornillería', G.tornilleria, 1], ['Accesorios', G.accesorios, 1],
-      ['Vidrios', G.vidrios, 1], ['Herraje', G.herraje, 1], ['Fabricación ventana', G.fabricacion, 1], ['Acristalamiento', G.acristalamiento, 1]];
-    $('h-res').innerHTML = filas.map(([n, c, m]) => `<tr><td>${n}</td><td class="num">${fmt(c)}</td><td class="num">${fmt(c * m)}</td><td class="num">${fmt(c * m * mg)}</td></tr>`).join('') +
-      `<tr><td><strong>Total por unidad</strong></td><td class="num"><strong>${fmt(h.compra)}</strong></td><td class="num"><strong>${fmt(h.venta1)}</strong></td><td class="num"><strong>${fmt(h.venta)}</strong></td></tr>`;
+    if (!it) { $('h-det').innerHTML = `<tr><td colspan="7" class="muted">Agregá una abertura al presupuesto para ver su despiece.</td></tr>`; $('h-res').innerHTML = ''; $('h-chip').innerHTML = ''; return }
+    sel.value = it.id; $('h-chip').innerHTML = chip(it.tipologia);
+    const PP = P(), h = M.hetmo(it, PP), mg = 1 + PP.margen / 100;
+    const N = { perfiles: 'Perfiles', refuerzos: 'Refuerzos', juntas: 'Juntas', tornilleria: 'Tornillería', accesorios: 'Accesorios', vidrios: 'Vidrios', tapajuntas: 'Tapajuntas', herraje: 'Herraje', fabricacion: 'Fabricación ventana', acristalamiento: 'Acristalamiento' };
+    $('h-res').innerHTML = Object.keys(N).map(k => `<tr><td>${N[k]}</td><td class="num">${f3(h.compra[k])}</td><td class="num">${f3(h.venta1Grupos[k])}</td><td class="num">${PP.margen}</td><td class="num">${f3(h.venta1Grupos[k] * mg)}</td></tr>`).join('') +
+      `<tr><td>Montaje</td><td class="num">0</td><td class="num">${f3(h.montaje)}</td><td class="num">${PP.margen}</td><td class="num">${f3(h.montaje * mg)}</td></tr>` +
+      `<tr><td><strong>Total compra / venta 1 / venta</strong></td><td class="num"><strong>${fmt(h.totalCompra)}</strong></td><td class="num"><strong>${fmt(h.venta1)}</strong></td><td></td><td class="num"><strong>${fmt(h.venta)}</strong></td></tr>`;
+    $('h-det').innerHTML = h.detalle.map(d => `<tr><td class="mono">${d.cod}</td><td>${d.desc}</td><td class="num">${d.unidad === 'm²' ? f3(d.cant) + ' m²' : d.unidad === 'm' && !d.largo ? f3(d.cant) + ' m' : d.uds}</td><td class="num mono">${d.largo || ''}</td><td class="muted">${d.det}</td><td class="num">${f3(d.precio)}</td><td class="num">${f3(d.importe)}</td></tr>`).join('');
   }
 
-  // ----- parámetros -----
-  function renderParams() {
-    const p = P();
-    $('params').innerHTML = Object.keys(PARAM_LABELS).map(k => `<label>${PARAM_LABELS[k]}<input type="number" step="any" id="p-${k}" data-k="${k}" value="${p[k]}"></label>`).join('');
-  }
+  function renderParams() { const p = P(); $('params').innerHTML = Object.keys(PARAM_LABELS).map(k => `<label>${PARAM_LABELS[k]}<input type="number" step="any" id="p-${k}" data-k="${k}" value="${p[k]}"></label>`).join('') }
 
-  // ----- validación -----
-  async function validar() {
-    let D; try { D = await (await fetch('wmaker_reales.json')).json() } catch { $('v-res').textContent = 'no se pudo cargar'; return }
-    const col = c => { c = (c || '').toLowerCase(); if (!c || c === '-' || c.startsWith('blanc')) return 'blanco'; if (c.includes('/')) return 'bic_golden'; if (c.includes('grafito')) return 'grafito'; if (c.includes('negr')) return 'negro'; if (c.includes('nogal')) return 'nogal'; return 'golden' };
-    const vid = v => { v = v.toLowerCase(); if (v.startsWith('dvh')) return v.includes('satin') ? 'dvh_sat' : 'dvh'; if (v.includes('float')) return 'float4'; if (v.includes('satin')) return 'sat4'; if (v.includes('simple laminado')) return 'lam33'; if (v.includes('simple')) return 'float5'; if (v.includes('lam')) return 'dvh_lam'; return 'dvh' };
-    const rows = [];
-    D.pano_fijo.forEach(r => { if (!/secc|trav/.test(r.vidrio)) rows.push(['pano', r]) });
-    D.corredizas.forEach(r => rows.push([r.hojas === '3' ? 'corr3' : 'corr2', r]));
-    D.practicables.forEach(r => { if (/curv/.test(r.vidrio) || /Osc1x2|A35x2|VA32/.test(r.cod)) return; const o = /osc/i.test(r.vidrio + r.cod); rows.push([(o ? 'osc' : 'abrir') + (r.hojas === '2' ? '2' : '1'), r]) });
-    D.proyectantes.forEach(r => rows.push(['proy', r])); D.puertas.forEach(r => rows.push([r.w > 2000 ? 'puerta2' : 'puerta1', r]));
-    const errs = [];
-    $('v-tab').innerHTML = rows.map(([tip, r]) => {
-      const p = M.precioLista({ tipologia: tip, ancho: r.w, alto: r.h, color: col(r.color), vidrio: vid(r.vidrio) }, P());
-      const real = r.basico + r.vid, est = p.basico + p.vidrio, e = (est - real) / real; errs.push(Math.abs(e));
-      const cls = Math.abs(e) < .05 ? 'e-ok' : Math.abs(e) < .12 ? 'e-mid' : 'e-bad';
-      return `<tr><td class="mono">${r.cod}</td><td>${M.TIPOLOGIAS[tip].nombre}</td><td class="mono">${r.w}×${r.h}</td><td class="muted">${r.color || '—'} · ${r.vidrio}</td><td class="num">${fmt(real)}</td><td class="num">${fmt(est)}</td><td class="num ${cls}">${e > 0 ? '+' : ''}${(e * 100).toFixed(1)}%</td></tr>`;
+  function validar() {
+    const casos = [['V1 corrediza 1500×1100 blanca', { tipologia: 'corr2', ancho: 1500, alto: 1100, color: 'blanco', vidrio: 'dvh' }, 389.25, 757.77],
+      ['V4 corrediza 1500×1100 golden oak', { tipologia: 'corr2', ancho: 1500, alto: 1100, color: 'golden', vidrio: 'dvh' }, 455.43, 866.63],
+      ['V2 abrir 600×1000 blanca', { tipologia: 'abrir1', ancho: 600, alto: 1000, color: 'blanco', vidrio: 'dvh' }, 207.82, 414.35],
+      ['V3 paño fijo 1000×1000 blanco', { tipologia: 'pano', ancho: 1000, alto: 1000, color: 'blanco', vidrio: 'dvh' }, 144.00, 336.25]];
+    let maxd = 0;
+    $('v-tab').innerHTML = casos.map(([n, it, c, v]) => {
+      const h = M.hetmo(it, Object.assign({}, S.params, { tipoCambio: 1540 })), d = (h.venta - v) / v; maxd = Math.max(maxd, Math.abs(d));
+      return `<tr><td>${n}</td><td class="num">${fmt(c)}</td><td class="num">${fmt(h.totalCompra)}</td><td class="num">${fmt(v)}</td><td class="num">${fmt(h.venta)}</td><td class="num ${Math.abs(d) < .001 ? 'e-ok' : 'e-mid'}">${(d * 100).toFixed(2)}%</td></tr>`;
     }).join('');
-    errs.sort((a, b) => a - b);
-    $('v-res').textContent = `${errs.length} ventanas · mitad a menos de ${(errs[errs.length >> 1] * 100).toFixed(1)}% · ${errs.filter(x => x < .1).length} a menos de 10%`;
+    $('v-res').textContent = maxd < .001 ? '4 de 4 ventanas iguales a Hetmo' : `diferencia máxima ${(maxd * 100).toFixed(2)}%`;
   }
 
-  // ----- eventos -----
+  // eventos
   ['f-tip', 'f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-mosq'].forEach(id => $(id).addEventListener('input', preview));
   $('f-tip').addEventListener('change', () => { if (!editId) $('f-cod').value = sugerirCodigo($('f-tip').value) });
   $('f-item').addEventListener('submit', e => {
     e.preventDefault(); const it = leerForm(); if (!it.cod) it.cod = sugerirCodigo(it.tipologia);
     if (editId) { Object.assign(S.items.find(i => i.id === editId), it); S.sel = editId; toast('Abertura actualizada') }
     else { it.id = S.nextId++; S.items.push(it); S.sel = it.id; toast('Agregada al presupuesto') }
-    salirEdicion(); render();
+    $('h-item').value = S.sel; salirEdicion(); render();
   });
   function salirEdicion() { editId = null; $('b-guardar').textContent = 'Agregar al presupuesto'; $('b-cancelar').hidden = true; $('modo-chip').textContent = 'Nueva'; $('f-cod').value = sugerirCodigo($('f-tip').value); preview() }
   $('b-cancelar').addEventListener('click', salirEdicion);
   $('t-items').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.ed) { const it = S.items.find(i => i.id === +b.dataset.ed); editId = it.id; S.sel = it.id; cargarForm(it); $('b-guardar').textContent = 'Guardar cambios'; $('b-cancelar').hidden = false; $('modo-chip').textContent = 'Editando ' + (it.cod || ''); preview(); render(); $('f-ancho').focus() }
+    if (b.dataset.ed) { const it = S.items.find(i => i.id === +b.dataset.ed); editId = it.id; S.sel = it.id; cargarForm(it); $('b-guardar').textContent = 'Guardar cambios'; $('b-cancelar').hidden = false; $('modo-chip').textContent = 'Editando ' + (it.cod || ''); $('h-item').value = it.id; preview(); render(); $('f-ancho').focus() }
     if (b.dataset.dup) { const it = S.items.find(i => i.id === +b.dataset.dup); const n = Object.assign({}, it, { id: S.nextId++, cod: sugerirCodigo(it.tipologia) }); S.items.push(n); S.sel = n.id; render(); toast('Duplicada como ' + n.cod) }
     if (b.dataset.del) { S.items = S.items.filter(i => i.id !== +b.dataset.del); if (editId === +b.dataset.del) salirEdicion(); render() }
   });
-  $('t-desc').addEventListener('input', e => { S.descuento = Math.max(0, +e.target.value || 0); render(); preview() });
-  $('t-coloc').addEventListener('input', e => { S.coloc = e.target.value === '' ? null : +e.target.value; render() });
-  $('t-contra').addEventListener('input', e => { S.contra = e.target.value === '' ? null : +e.target.value; render() });
-  ['c-nombre', 'c-dir', 'c-fecha'].forEach(id => $(id).addEventListener('input', e => { S.cliente[id.slice(2) === 'nombre' ? 'nombre' : id.slice(2)] = e.target.value; render() }));
+  $('t-desc').addEventListener('input', e => { S.params.descuento = Math.max(0, +e.target.value || 0); render(); preview() });
+  $('t-tc').addEventListener('input', e => { const v = +e.target.value; if (v > 0) { S.params.tipoCambio = v; render(); preview() } });
+  $('t-montaje').addEventListener('change', e => { S.params.incluirMontaje = e.target.checked ? 1 : 0; render(); preview() });
+  ['nombre', 'dir', 'fecha'].forEach(k => $('c-' + k).addEventListener('input', e => { S.cliente[k] = e.target.value; save() }));
   $('b-copiar').addEventListener('click', () => {
-    const txt = $('doc').textContent;
-    navigator.clipboard.writeText(txt).then(() => toast('Presupuesto copiado'), () => { $('d-doc').open = true; const r = document.createRange(); r.selectNodeContents($('doc')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Texto seleccionado: copialo con Ctrl+C') });
+    const txt = documento();
+    navigator.clipboard.writeText(txt).then(() => toast('Presupuesto copiado'), () => { toast('No se pudo copiar en este navegador') });
   });
   $('b-nuevo').addEventListener('click', () => { $('confirm-nuevo').hidden = false });
   $('b-no').addEventListener('click', () => { $('confirm-nuevo').hidden = true });
-  $('b-si').addEventListener('click', () => { const params = S.params; S = { cliente: { nombre: '', dir: '', fecha: new Date().toISOString().slice(0, 10) }, items: [], descuento: P().descuento, coloc: null, contra: null, params, sel: null, nextId: 1 }; $('confirm-nuevo').hidden = true; initCliente(); salirEdicion(); render() });
+  $('b-si').addEventListener('click', () => { S = { cliente: { nombre: '', dir: '', fecha: new Date().toISOString().slice(0, 10) }, items: [], params: S.params, sel: null, nextId: 1 }; $('confirm-nuevo').hidden = true; initCliente(); salirEdicion(); render() });
   $('h-item').addEventListener('change', renderHetmo);
   $('params').addEventListener('input', e => { const k = e.target.dataset.k; if (!k) return; const v = parseFloat(e.target.value); if (isNaN(v)) return; S.params[k] = v; render(); preview(); validar() });
-  $('b-reset').addEventListener('click', () => { S.params = {}; renderParams(); render(); preview(); validar(); toast('Parámetros restablecidos') });
+  $('b-reset').addEventListener('click', () => { S.params = { tipoCambio: S.params.tipoCambio }; renderParams(); render(); preview(); validar(); toast('Parámetros restablecidos') });
 
   let tt; function toast(m) { const t = $('toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 1800) }
   function initCliente() { $('c-nombre').value = S.cliente.nombre || ''; $('c-dir').value = S.cliente.dir || ''; $('c-fecha').value = S.cliente.fecha || '' }
 
   initCliente(); renderParams();
-  const first = S.items.find(i => i.id === S.sel) || { tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: true };
+  const first = S.items.find(i => i.id === S.sel) || { tipologia: 'corr2', ancho: 1500, alto: 1100, cantidad: 1, color: 'blanco', vidrio: 'dvh', mosquitero: false };
   cargarForm(Object.assign({}, first, { cod: '' })); $('f-cod').value = sugerirCodigo(first.tipologia);
   preview(); render(); validar();
 })();
