@@ -338,6 +338,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
         <label>${eje} (mm)<input type="number" min="200" step="5" data-i="${i}" data-k="medida" value="${ult ? R[i].medida : (s.medida || R[i].medida)}" ${ult ? 'disabled title="Es lo que queda del total"' : ''}></label>` : ''}
         <label ${multi ? '' : 'class="span2"'}>Tipo<select data-i="${i}" data-k="tipo">${Object.entries(M.TIPOS).map(([k, v]) => `<option value="${k}" ${k === s.tipo ? 'selected' : ''}>${v.nombre}</option>`).join('')}</select></label>
         <label>Hojas<select data-i="${i}" data-k="hojas" ${t.hojas.length < 2 ? 'disabled' : ''}>${hojas}</select></label>
+        ${s.tipo === 'corrediza' ? `<label>Línea<select data-i="${i}" data-k="linea"><option value="auto" ${!s.linea || s.linea === 'auto' ? 'selected' : ''}>Automática (${M.lineaCorr({ h: R[i].h }) === 'P90' ? 'Prime 90/44' : 'Prime 74'})</option><option value="P74" ${s.linea === 'P74' ? 'selected' : ''}>Prime 74</option><option value="P90" ${s.linea === 'P90' ? 'selected' : ''}>Prime 90/44</option></select></label>` : ''}
         ${conMano ? `<label>${manoTxt}<select data-i="${i}" data-k="mano"><option value="izq" ${s.mano === 'izq' ? 'selected' : ''}>Izquierda</option><option value="der" ${s.mano !== 'izq' ? 'selected' : ''}>Derecha</option></select></label>` : ''}
         ${checks ? `<div class="checks">${checks}</div>` : ''}
       </div>`;
@@ -351,6 +352,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     else if (el.dataset.k === 'tipo') { s.tipo = el.value; const hh = M.TIPOS[s.tipo].hojas; if (!hh.includes(s.hojas)) s.hojas = hh[0]; s.osc = []; if (!M.TIPOS[s.tipo].mosq) s.mosq = false; renderSecs() }
     else if (el.dataset.k === 'hojas') { s.hojas = +el.value; renderSecs() }
     else if (el.dataset.k === 'mano') s.mano = el.value;
+    else if (el.dataset.k === 'linea') s.linea = el.value;
     else if (el.dataset.k === 'medida') { s.medida = +el.value || 0; const R = M.secciones(itemForm()).secciones; document.querySelectorAll('#secs .sec .tit .muted').forEach((x, j) => x.textContent = `${R[j].w} × ${R[j].h} mm`); const u = document.querySelector(`#secs input[data-k="medida"][disabled]`); if (u) u.value = R[R.length - 1].medida }
     preview();
   });
@@ -813,7 +815,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
   ['f-cant', 'f-ancho', 'f-alto', 'f-color', 'f-vidrio', 'f-dto', 'f-iva'].forEach(id => $(id).addEventListener('input', () => { if (id === 'f-ancho' || id === 'f-alto') renderSecs(); preview() }));
   $('f-item').addEventListener('submit', e => {
     e.preventDefault(); const it = itemForm(); if (!it.cod) it.cod = sugerirCodigo();
-    it.secciones = M.secciones(it).secciones.map(({ tipo, hojas, mano, mosq, osc, medida }) => ({ tipo, hojas, mano, mosq: !!mosq, osc: osc || [], medida }));
+    it.secciones = M.secciones(it).secciones.map(({ tipo, hojas, mano, mosq, osc, medida, linea }) => ({ tipo, hojas, mano, mosq: !!mosq, osc: osc || [], medida, linea: linea || 'auto' }));
     if (editId) { Object.assign(S.items.find(i => i.id === editId), it); S.sel = editId; toast('Abertura actualizada') }
     else { it.id = S.nextId++; S.items.push(it); S.sel = it.id; toast('Agregada al presupuesto') }
     $('h-item').value = S.sel; salirEdicion(); render();

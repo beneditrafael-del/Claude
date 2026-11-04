@@ -177,12 +177,12 @@
     'GU-9-447':  ['Cerradero R13', 'herraje', 0.835, null, 0],
     'GU-9-488':  ['EJE SOPORTE DE COMPAS UNI-JET', 'herraje', 0.376, null, 0],
     'GU-K-186':  ['KIT 4 TAPAS BIS. AL CANTO UNI-JET', 'herraje', 1.651, null, 0],
-    'GU-OSC':    ['COMPAS OSCILOBATIENTE UNI-JET (aprox.)', 'herraje', 15.5, null, 0],
+    'GU-OSC':    ['COMPAS OSCILOBATIENTE UNI-JET (calibrado con presupuestos)', 'herraje', 29.7, null, 0],
     'GU-PROY':   ['COMPASES PROYECTANTE (aprox.)', 'herraje', 21.4, null, 0],
     'GU-PAS':    ['PASADORES HOJA PASIVA (aprox.)', 'herraje', 9.5, null, 0],
     'CERR-MP':   ['CERRADURA MULTIPUNTO 25/92', 'herraje', 35.17, null, 0],
     'BIS-PTA':   ['BISAGRA PUERTA (aprox.)', 'herraje', 8.0, null, 0],
-    'GU-BAND':   ['COMPASES BANDEROLA UNI-JET (aprox.)', 'herraje', 14.8, null, 0],
+    'GU-BAND':   ['COMPASES BANDEROLA UNI-JET (calibrado con presupuestos)', 'herraje', 0.5, null, 0],
     '111251000': ['POSTE DC 58', 'perfiles', 6.54, { golden: 11.18, bic_grafito: 7.52 }, 1],
     '145070000': ['KIT ESCUADRA POSTE DC', 'accesorios', 2.66, null, 0],
     '913091000': ['PERFIL ACOPLE 20X3 MM', 'perfiles', 0.07, { golden: 1.2, turner: 1.57, negro: 1.38 }, 1],
@@ -324,15 +324,27 @@
     if (!s.mosq) return 0;
     const t = TIPOS[s.tipo]; if (!t || !t.mosq) return 0;
     const W = s.w / 1000, H = s.h / 1000, fc = esColor(color) ? 1.27 : 1;
-    if (t.mosq === 'corredizo') { const n = s.hojas || 2, nm = n === 3 ? 2 : Math.max(1, Math.floor(n / 2)); return nm * (45.4 + 120.4 * (W / n) * H) * fc }
+    // Corredizo: calibrado con el presupuesto Hetmo N° 240 (mismo presupuesto con y sin mosquitera, 26/10/2026).
+    if (t.mosq === 'corredizo') { const n = s.hojas || 2, nm = n === 3 ? 2 : Math.max(1, Math.floor(n / 2)); return nm * (132.06 + 56.55 * W * 2 / n + 28 * (H - 2)) * fc }
     return (40 + 70 * W * H) * fc;
+  }
+
+  // Línea de la corrediza: Hetmo usa LINEA PRIME (90/44) en las altas y PRIME 74 en el resto.
+  const lineaCorr = s => s.linea === 'P74' || s.linea === 'P90' ? s.linea : (s.h >= 1900 ? 'P90' : 'P74');
+  // Ajustes calibrados contra presupuestos reales de Hetmo (hasta tener sus despieces):
+  // carpintería Prime 90/44 vs Prime 74 (N° 240), corrediza de 3 hojas y puertas DC 100.
+  const AJUSTE = { P90: 1.405, corr3: 0.72, puerta: 1.63 };
+  function ajusteSeccion(s) {
+    if (s.tipo === 'corrediza') return (lineaCorr(s) === 'P90' ? AJUSTE.P90 : 1) * (s.hojas === 3 ? AJUSTE.corr3 : 1);
+    if (s.tipo === 'puerta') return AJUSTE.puerta;
+    return 1;
   }
 
   function esExacto(item) {
     const { secciones: S } = secciones(item);
     if (S.length !== 1) return false;
     const s = S[0];
-    return (s.tipo === 'corrediza' && s.hojas === 2) || s.tipo === 'pano' || (s.tipo === 'abrir' && s.hojas === 1 && !(s.osc || [])[0]);
+    return (s.tipo === 'corrediza' && s.hojas === 2 && lineaCorr(s) === 'P74') || s.tipo === 'pano' || (s.tipo === 'abrir' && s.hojas === 1 && !(s.osc || [])[0]);
   }
 
   function hetmo(item, P) {
@@ -357,6 +369,7 @@
     let mosq = 0;
     S.forEach((s, i) => {
       const nombre = S.length > 1 ? `S${i + 1}` : '';
+      const antes = Object.assign({}, G), antes1 = Object.assign({}, V1);
       const { piezas, vidrios, tornillos } = ficha(s, color);
       for (const pz of piezas) agregar(pz, nombre);
       for (const [gw, gh] of vidrios) {
@@ -372,6 +385,14 @@
       const fb = fabricacion(s, tornillos, vidrios.reduce((t, [a, b]) => t + Math.max(a, 0) * Math.max(b, 0) / 1e6, 0));
       G.fabricacion += fb; V1.fabricacion += fb;
       const ac = ACRISTALAMIENTO * vidrios.length; G.acristalamiento += ac; V1.acristalamiento += ac;
+      const f = ajusteSeccion(s);
+      if (f !== 1) {
+        let delta = 0;
+        for (const k of Object.keys(G)) if (k !== 'vidrios' && k !== 'acristalamiento') {
+          const d = (G[k] - antes[k]) * (f - 1); delta += d; G[k] += d; V1[k] += (V1[k] - antes1[k]) * (f - 1);
+        }
+        det.push({ seccion: nombre, cod: 'AJUSTE', desc: s.tipo === 'corrediza' && lineaCorr(s) === 'P90' ? 'Ajuste línea Prime 90/44 (calibrado con presupuestos)' : 'Ajuste calibrado con presupuestos', grupo: 'ajuste', uds: 1, cant: 1, unidad: 'u', det: '×' + f.toFixed(3) + ' sobre carpintería', precio: delta, importe: delta });
+      }
       mosq += mosquitero(s, color);
     });
     // Uniones entre secciones: poste DC compartido o acople entre marcos.
@@ -412,6 +433,7 @@
   const MANO = { izq: 'izquierda', der: 'derecha' };
   function descSeccion(s) {
     const t = TIPOS[s.tipo]; let d = t.desc;
+    if (s.tipo === 'corrediza') d += lineaCorr(s) === 'P90' ? ' línea Prime 90/44' : ' línea Prime 74';
     if (s.tipo !== 'pano' && s.hojas) d += ` ${s.hojas === 1 ? '1 hoja' : s.hojas + ' hojas'}`;
     if (s.tipo === 'abrir' && (s.osc || []).slice(0, s.hojas).some(Boolean)) {
       const o = s.osc.slice(0, s.hojas).map((x, i) => x ? i + 1 : 0).filter(Boolean);
@@ -483,6 +505,6 @@
       hayCon: G.con.unidades > 0, haySin: G.sin.unidades > 0 };
   }
 
-  const api = { TIPOS, COLORES, VIDRIOS, PARAMETROS_BASE, ART, secciones, hetmo, precio, descripcion, descSeccion, totales, migrar, esExacto };
+  const api = { AJUSTE, lineaCorr, TIPOS, COLORES, VIDRIOS, PARAMETROS_BASE, ART, secciones, hetmo, precio, descripcion, descSeccion, totales, migrar, esExacto };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.MotorGH = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -139,3 +139,14 @@ Sale de las capturas de las 4 ventanas de prueba (`capturas/hetmo_prueba/`, carg
 - **Contravidrio:** lado del vidrio + 8.
 
 **Aproximadas (sin captura de Hetmo):** corrediza de 3 hojas, de abrir de 2 hojas, oscilobatientes, proyectante, puertas y mosquiteros.
+
+## Comparación con presupuestos reales de Hetmo (`datos/presupuestos_hetmo/`)
+Son 5 presupuestos con 51 ventanas. Se comparan con `node datos/presupuestos_hetmo/comparar.js datos/presupuestos_hetmo/ventanas.json 1565`.
+- **Prime 90/44:** Hetmo usa la "LINEA PRIME" (90/44) en las corredizas altas y la "PRIME 74" en el resto. El cotizador la elige sola a partir de 1900 mm de alto, y se puede forzar. Su carpintería es la de Prime 74 ×1,405, calibrado con el N° 240.
+- **Mosquitero corredizo:** 132,06 + 56,55 × ancho de hoja × 2 + 28 × (alto − 2), en USD de venta por hoja de mosquitero. Calibrado con el N° 240, que tiene una versión con mosquitera y otra sin.
+- **Ajustes de carpintería mientras no haya despiece:**
+  - Corrediza de 3 hojas ×0,72 (N° 236).
+  - Puerta DC 100 ×1,63 (N° 215 y 192).
+  - Compás oscilobatiente 29,7 y compás de banderola 0,5 (N° 236 y 215).
+- **Resultado con los presupuestos de octubre (N° 240, 236 y 215, 33 ventanas):** error medio de 2,0%; 25 ventanas a menos de 3% y 30 a menos de 5%.
+- **El N° 192, de septiembre, da 7,9% de error medio.** En golden con vidrio 5T/12/5T y en oscilobatientes golden queda 15% abajo; puede ser otra lista de precios u otro dólar.
