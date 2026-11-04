@@ -89,7 +89,7 @@ Sale del PDF "Articulos de almacen con precios HETMO" (359 páginas, unos 20.000
 - **Herrajes** (GU, ROTO, VBH, REZE, VORNE, Häusen, Magnum): precio por unidad.
 
 ## Motor Hetmo (`app/motor.js`)
-Sale de las capturas de las 4 ventanas de prueba (`capturas/hetmo_prueba/`), cargadas con el dólar a $1540. El cotizador reproduce las 4 al centavo.
+Sale de las capturas de las 4 ventanas de prueba (`capturas/hetmo_prueba/`, cargadas con el dólar a $1540) y de la tanda de 15 (`capturas/hetmo_tanda/`, con el dólar a $1565). Las 6 ventanas que hay hasta ahora dan a menos de USD 0,11 de Hetmo.
 
 | Ventana | Ficha | Compra | Venta 1 | Venta |
 |---|---|---|---|---|
@@ -114,7 +114,10 @@ Sale de las capturas de las 4 ventanas de prueba (`capturas/hetmo_prueba/`), car
 - **Tapajuntas 91305:**
   - Clips por lado: el máximo entre 3 y ancho/250 redondeado hacia abajo.
   - Tornillos VR-T-01: largo/350 redondeado, por lado.
-- **Fabricación:** valor calibrado por tipología, que escala con el perímetro. Es el único supuesto que queda en las 3 fichas verificadas.
+- **Fabricación:** un fijo por tipología, más USD 0,0757 por tornillo TR-16, más USD 0,408 por m² de vidrio. Se calibró con 4 corredizas (`capturas/hetmo_tanda/`: 1000×900 y 2000×1500 al dólar de $1565) y da error menor a USD 0,01. De abrir y paño fijo se calibraron con una captura cada uno.
+- **Clips del tapajuntas:** uno cada 300 mm de tapajuntas, redondeando hacia arriba.
+- **Tapas de desagüe de la corrediza:** 2, o 1 cada 750 mm de ancho si eso da más.
+- **Tornillos de las hojas de la corrediza en blanco:** (largo del refuerzo − 30) / 250, redondeando hacia arriba.
 
 **Cortes:**
 - **Prime 74:**

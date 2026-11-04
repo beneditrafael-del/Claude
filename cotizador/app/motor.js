@@ -227,7 +227,7 @@
     let tr = 0; const trs = (largo, paso) => { tr += Math.ceil(Math.max(largo, 1) / paso) };
     const lados = [['t', W], ['b', W], ['l', H], ['r', H]];
     const remate = () => {
-      const clip = x => Math.max(3, Math.floor(x / 250));
+      const clip = x => Math.ceil((x + 70) / 300);   // un clip cada 300 mm de tapajuntas
       let clips = 0, vrt = 0;
       for (const [k, x] of lados) if (ld[k] === 'ext') { p('913051000', 1, x + 70, 'tapajuntas'); clips += clip(x); vrt += Math.round((x + 70) / 350) }
       const esq = [['t', 'l'], ['t', 'r'], ['b', 'l'], ['b', 'r']].filter(([a, b]) => ld[a] === 'ext' && ld[b] === 'ext').length;
@@ -245,11 +245,13 @@
       for (let i = 0; i < n; i++) { vid.push([gw, gh]); p('410061000', 2, gw + 8); p('410061000', 2, gh + 8) }
       const pasoH = col ? 170 : 250, pasoM = col ? 200 : 300;
       p('920100015', 2 * n, hw - 130, 'refuerzo hoja'); p('920100015', 2 * n, hh - 130, 'refuerzo hoja');
-      for (let i = 0; i < 2 * n; i++) { trs(hw - 130, pasoH); trs(hh - 130, pasoH) }
+      // hojas en blanco: un tornillo cada 250 mm descontando 30 mm de punta; en color, cada 170 mm
+      const trsH = l => col ? trs(l, pasoH) : trs(l - 30, 250);
+      for (let i = 0; i < 2 * n; i++) { trsH(hw - 130); trsH(hh - 130) }
       for (const [k, x] of lados) { p('920220015', 1, x - 88, 'refuerzo marco'); trs(x - 88, pasoM) }
       p('932003300', 2 * (n - 1), 0, (H - 96) + ' mm'); if (n > 1) L[L.length - 1].cantM = (H - 96) / 1000;
       p('145040000', 4 * n, 0); p('145101000', 2 * (n - 1), 0); p('145231000', 2 * n, 0);
-      p('945131000', 2, 0); p('945160000', 4 * n, 0);
+      p('945131000', Math.max(2, Math.ceil(W / 750)), 0); p('945160000', 4 * n, 0);
       remate();
       const cr = rango(CREMONA_INLINE, hh - 100), moviles = n === 3 ? 2 : n;
       p('GU-C-906', moviles, 0); p('GU-E-138', 2 * n, 0); p('GU-E-181', n, 0);
@@ -297,22 +299,24 @@
       remate();
     }
     p('TR-16', tr, 0);
-    return { piezas: L, vidrios: vid };
+    return { piezas: L, vidrios: vid, tornillos: tr };
   }
 
-  // Fabricación (USD de compra) calibrada con las capturas; la mitad fija y la mitad escala con el perímetro.
-  function fabricacion(s) {
-    const per = 2 * (s.w + s.h) / 1000, n = s.hojas || 0;
-    let base, ref;
-    if (s.tipo === 'corrediza') { base = 96.238 * (1 + 0.4 * (n - 2)); ref = 5.2 }
-    else if (s.tipo === 'pano') { base = 39.13; ref = 4.0 }
+  // Fabricación (USD de compra): un fijo por tipología + USD 0,0757 por tornillo TR-16 + USD 0,408 por m² de vidrio.
+  // Calibrado con 4 corredizas de Hetmo (1000×900, 1500×1100 blanca y golden, 2000×1500): error < 0,01.
+  // De abrir y paño fijo: el fijo sale de una captura cada uno; el resto de las tipologías, por analogía.
+  function fabricacion(s, tornillos, m2) {
+    const n = s.hojas || 0;
+    let base;
+    if (s.tipo === 'corrediza') base = 92.3123 * (1 + 0.4 * (n - 2));
+    else if (s.tipo === 'pano') base = 37.591;
     else {
-      base = 70.946 * (n === 1 ? 1 : n === 2 ? 1.7 : 2.4); ref = 3.2;
+      base = 69.009 * (n === 1 ? 1 : n === 2 ? 1.7 : 2.4);
       if (s.tipo === 'puerta') base *= 1.3;
       const osc = s.tipo === 'oscilo' ? n : (s.osc || []).slice(0, n).filter(Boolean).length;
       base += 7 * osc;
     }
-    return base * (0.5 + 0.5 * per / ref);
+    return base + 0.0757 * tornillos + 0.40807 * m2;
   }
   const ACRISTALAMIENTO = 2.9165; // por vidrio
 
@@ -353,7 +357,7 @@
     let mosq = 0;
     S.forEach((s, i) => {
       const nombre = S.length > 1 ? `S${i + 1}` : '';
-      const { piezas, vidrios } = ficha(s, color);
+      const { piezas, vidrios, tornillos } = ficha(s, color);
       for (const pz of piezas) agregar(pz, nombre);
       for (const [gw, gh] of vidrios) {
         const a = Math.max(0.5, Math.ceil(gw / 10) * Math.ceil(gh / 10) / 10000), imp = a * usdM2;
@@ -365,7 +369,7 @@
           det.push({ seccion: nombre, cod: vid.camara, desc: 'Separador cámara ' + vid.camara, grupo: 'vidrios', uds: 1, cant: per, unidad: 'm', det: 'perímetro del vidrio', precio: pc, importe: ic });
         }
       }
-      const fb = fabricacion(s) * (esColor(color) ? 1.0173 : 1);
+      const fb = fabricacion(s, tornillos, vidrios.reduce((t, [a, b]) => t + Math.max(a, 0) * Math.max(b, 0) / 1e6, 0));
       G.fabricacion += fb; V1.fabricacion += fb;
       const ac = ACRISTALAMIENTO * vidrios.length; G.acristalamiento += ac; V1.acristalamiento += ac;
       mosq += mosquitero(s, color);
