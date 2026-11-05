@@ -992,8 +992,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     if (!s.mosq) return 0;
     const t = TIPOS[s.tipo]; if (!t || !t.mosq) return 0;
     const W = s.w / 1000, H = s.h / 1000, fc = esColor(color) ? 1.27 : 1;
-    // Corredizo: calibrado con el presupuesto Hetmo N° 240 (mismo presupuesto con y sin mosquitera, 26/10/2026).
-    if (t.mosq === 'corredizo') { const n = s.hojas || 2, nm = n === 3 ? 2 : Math.max(1, Math.floor(n / 2)); return nm * (132.06 + 56.55 * W * 2 / n + 28 * (H - 2)) * fc }
+    // Corredizo (USD de venta): calibrado con el N° 240 con y sin mosquitera (2200×2000 y 1600×2000) y la V3 de la tanda (1500×1100).
+    if (t.mosq === 'corredizo') { const n = s.hojas || 2, nm = n === 3 ? 2 : Math.max(1, Math.floor(n / 2)); return nm * (65.685 + 56.55 * W * 2 / n + 33.187 * H) * fc }
     return (40 + 70 * W * H) * fc;
   }
 
