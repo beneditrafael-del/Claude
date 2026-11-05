@@ -446,7 +446,7 @@ details.card > .in { padding: 0 16px 16px; display: flex; flex-direction: column
     const p = M.precio(it, P());
     const rows = [['Carpintería', p.carpinteria], ['Vidrios', p.vidrios]];
     if (P().incluirMontaje) rows.push(['Montaje', p.montaje]);
-    if (p.mosq) rows.push(['Mosquitero (estimado)', p.mosq]);
+    if (p.mosq) rows.push(['Mosquitero', p.mosq]);
     $('p-chip').innerHTML = chip(it);
     $('p-desg').innerHTML = rows.map(([a, b]) => `<span>${a}</span><span class="num">${fmt(b)}</span>`).join('') +
       `<span class="tot">USD x U</span><span class="num tot">${fmt(p.unitario)}</span>` +
