@@ -114,6 +114,7 @@ Sale de las capturas de las 4 ventanas de prueba (`capturas/hetmo_prueba/`, carg
 - **Tapajuntas 91305:**
   - Clips por lado: el máximo entre 3 y ancho/250 redondeado hacia abajo.
   - Tornillos VR-T-01: largo/350 redondeado, por lado.
+- **Precios Jet Black (despiece V4 de la tanda):** marco DZ 13,016; tapa hoja 1,274; perfil remate 2,298; hoja Prime 74 8,624; encuentro 1,283; contravidrio 1,277. Los materiales de la V4 dan 368,59 contra 368,60 de Hetmo.
 - **Fabricación:** un fijo por tipología, más USD 0,0757 por tornillo TR-16, más USD 0,408 por m² de vidrio. Se calibró con 4 corredizas (`capturas/hetmo_tanda/`: 1000×900 y 2000×1500 al dólar de $1565) y da error menor a USD 0,01. De abrir y paño fijo se calibraron con una captura cada uno.
 - **Clips del tapajuntas:** uno cada 300 mm de tapajuntas, redondeando hacia arriba.
 - **Tapas de desagüe de la corrediza:** 2, o 1 cada 750 mm de ancho si eso da más.
