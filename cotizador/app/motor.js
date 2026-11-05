@@ -132,7 +132,13 @@
   const ART = {
     '110331000': ['HOJA PRIME 74', 'perfiles', 4.905, { golden: 8.083, nogal: 7.99, grafito: 8.0, negro: 8.624, turner: 8.66, bic_golden: 7.8, bic_negro: 8.49 }, 1],
     '112501000': ['MARCO DZ', 'perfiles', 5.774, { golden: 10.882, negro: 13.016, bic_golden: 7.46, bic_negro: 8.15 }, 1],
-    '112601000': ['MARCO 3 GUIAS DZ', 'perfiles', 11.2, { bic_golden: 11.21, bic_negro: 11.8 }, 1],
+    '112601000': ['MARCO 3 GUIAS DZ', 'perfiles', 11.198, { bic_golden: 11.21, bic_negro: 11.8 }, 1],
+    '410321000': ['CONTRAVIDRIO 32,5MM', 'perfiles', 1.248, {}, 1],
+    'TELA_3':    ['TELA MOSQUITERA', 'vidrios', 10, null, 0],
+    'VAR-BM':    ['BURLETE PARA MOSQUITERO', 'perfiles', 0.15, null, 0],
+    'GU-L-250-30': ['RUEDA 30 KG 21 MM', 'herraje', 2.284, null, 0],
+    'GU-CUB-EXT': ['CUBETA EXTERIOR CHICA', 'herraje', 4.651, null, 0],
+    'GU-CUB-INT': ['CUBETA INTERIOR CHICA', 'herraje', 5.257, null, 0],
     '113341000': ['TAPA HOJA PRIME', 'perfiles', 0.792, { golden: 1.099, negro: 1.274 }, 1],
     '113411000': ['Tapa encuentro DZ', 'perfiles', 0.134, null, 1],
     '113451000': ['ENCUENTRO PRIME 74', 'perfiles', 0.826, { golden: 1.19, nogal: 1.19, grafito: 1.14, negro: 1.283, turner: 1.31 }, 1],
@@ -236,21 +242,31 @@
     const tipo = s.tipo, n = s.hojas || 0;
     if (tipo === 'corrediza') {
       const hw = Math.round(W / n) - 5, hh = H - 90;
-      const marco = n === 3 ? '112601000' : '112501000';
-      p('110331000', 2 * n, hw, 'hoja horizontal'); p('110331000', 2 * n, hh, 'hoja vertical');
+      // Mosquitero en Prime 74 de 2 hojas: Hetmo pasa a marco de 3 guías y agrega una tercera hoja con tela.
+      const mq = mosqDespiece(s), nh = n + (mq ? 1 : 0);
+      const marco = n === 3 || mq ? '112601000' : '112501000';
+      p('110331000', 2 * nh, hw, 'hoja horizontal'); p('110331000', 2 * nh, hh, 'hoja vertical');
       for (const [k, x] of lados) p(marco, 1, x + 6, 'marco');
-      p('113341000', 2 * (n - 1), H - 98); p('113411000', 2 * (n - 1), H - 98); p('113451000', 2 * (n - 1), H - 98);
-      p('144410300', n === 3 ? 3 : 2, W - 112, 'guía');
+      const enc = 2 * (n - 1) + (mq ? 1 : 0);
+      p('113341000', enc, H - 98); p('113411000', enc, H - 98); p('113451000', enc, H - 98);
+      p('144410300', n === 3 || mq ? 3 : 2, W - 112, 'guía');
       const gw = Math.round(W / n) - 131, gh = H - 216;
       for (let i = 0; i < n; i++) { vid.push([gw, gh]); p('410061000', 2, gw + 8); p('410061000', 2, gh + 8) }
       const pasoH = col ? 170 : 250, pasoM = col ? 200 : 300;
-      p('920100015', 2 * n, hw - 130, 'refuerzo hoja'); p('920100015', 2 * n, hh - 130, 'refuerzo hoja');
+      p('920100015', 2 * nh, hw - 130, 'refuerzo hoja'); p('920100015', 2 * nh, hh - 130, 'refuerzo hoja');
       // hojas en blanco: un tornillo cada 250 mm descontando 30 mm de punta; en color, cada 170 mm
       const trsH = l => col ? trs(l, pasoH) : trs(l - 30, 250);
-      for (let i = 0; i < 2 * n; i++) { trsH(hw - 130); trsH(hh - 130) }
+      for (let i = 0; i < 2 * nh; i++) { trsH(hw - 130); trsH(hh - 130) }
+      if (mq) {
+        p('410321000', 2, gw + 8, 'hoja mosquitero'); p('410321000', 2, gh + 8, 'hoja mosquitero');
+        const tw = hw + 26, th = hh + 26;
+        L.push({ cod: 'TELA_3', uds: 1, largo: 0, cantM: Math.ceil(tw / 10) * Math.ceil(th / 10) / 10000, det: `${tw} × ${th}`, unidad: 'm²' });
+        L.push({ cod: 'VAR-BM', uds: 1, largo: 0, cantM: 2 * (tw + th) / 1000, det: 'perímetro de la tela' });
+        p('GU-L-250-30', 2, 0); p('GU-CUB-EXT', 1, 0); p('GU-CUB-INT', 1, 0);
+      }
       for (const [k, x] of lados) { p('920220015', 1, x - 88, 'refuerzo marco'); trs(x - 88, pasoM) }
-      p('932003300', 2 * (n - 1), 0, (H - 96) + ' mm'); if (n > 1) L[L.length - 1].cantM = (H - 96) / 1000;
-      p('145040000', 4 * n, 0); p('145101000', 2 * (n - 1), 0); p('145231000', 2 * n, 0);
+      p('932003300', enc, 0, (H - 96) + ' mm'); if (enc > 0) L[L.length - 1].cantM = (H - 96) / 1000;
+      p('145040000', 4 * n, 0); p('145101000', 2 * (n - 1) + (mq ? 2 : 0), 0); p('145231000', 2 * n + (mq ? 2 : 0), 0);
       p('945131000', Math.max(2, Math.ceil(W / 750)), 0); p('945160000', 4 * n, 0);
       remate();
       const cr = rango(CREMONA_INLINE, hh - 100), moviles = n === 3 ? 2 : n;
@@ -308,7 +324,7 @@
   function fabricacion(s, tornillos, m2) {
     const n = s.hojas || 0;
     let base;
-    if (s.tipo === 'corrediza') base = 92.3123 * (1 + 0.4 * (n - 2));
+    if (s.tipo === 'corrediza') base = 92.3123 * (1 + 0.4 * (n - 2)) + (mosqDespiece(s) ? 23.729 : 0);
     else if (s.tipo === 'pano') base = 37.591;
     else {
       base = 69.009 * (n === 1 ? 1 : n === 2 ? 1.7 : 2.4);
@@ -320,8 +336,10 @@
   }
   const ACRISTALAMIENTO = 2.9165; // por vidrio
 
+  // Mosquitero calculado pieza por pieza (verificado con la V3 de la tanda): corrediza Prime 74 de 2 hojas.
+  function mosqDespiece(s) { return !!s.mosq && s.tipo === 'corrediza' && (s.hojas || 2) === 2 && lineaCorr(s) === 'P74' }
   function mosquitero(s, color) {
-    if (!s.mosq) return 0;
+    if (!s.mosq || mosqDespiece(s)) return 0;
     const t = TIPOS[s.tipo]; if (!t || !t.mosq) return 0;
     const W = s.w / 1000, H = s.h / 1000, fc = esColor(color) ? 1.27 : 1;
     // Corredizo (USD de venta): calibrado con el N° 240 con y sin mosquitera (2200×2000 y 1600×2000) y la V3 de la tanda (1500×1100).
@@ -364,7 +382,7 @@
       const cant = pz.largo ? pz.uds * pz.largo / 1000 : pz.cantM ? pz.uds * pz.cantM : pz.uds;
       const imp = cant * precio;
       G[grupo] += imp; V1[grupo] += imp * (lineal ? P.mermaLineal : 1);
-      det.push({ seccion, cod: pz.cod, desc, grupo, uds: pz.uds, largo: pz.largo, cant, unidad: pz.largo || pz.cantM ? 'm' : 'u', det: pz.det, precio, importe: imp });
+      det.push({ seccion, cod: pz.cod, desc, grupo, uds: pz.uds, largo: pz.largo, cant, unidad: pz.unidad || (pz.largo || pz.cantM ? 'm' : 'u'), det: pz.det, precio, importe: imp });
     };
     let mosq = 0;
     S.forEach((s, i) => {
@@ -426,8 +444,14 @@
     P = Object.assign({}, PARAMETROS_BASE, P || {});
     const h = hetmo(item, P);
     const montaje = P.incluirMontaje ? h.montajeVenta : 0;
-    // Mosquitero: Hetmo lo cotiza con otra ficha; mientras tanto se estima con los precios de WMaker.
-    return { carpinteria: h.carpinteria, vidrios: h.vidrios, montaje, mosq: h.mosq, unitario: h.carpinteria + h.vidrios + montaje + h.mosq, hetmo: h };
+    let carp = h.carpinteria, vid = h.vidrios, mosq = h.mosq;
+    // Si el mosquitero va en el despiece, se separa por diferencia para mostrarlo (y descontarlo) aparte.
+    const R = secciones(item).secciones;
+    if (R.some(mosqDespiece)) {
+      const sin = hetmo(Object.assign({}, item, { secciones: (item.secciones || []).map((x, i) => Object.assign({}, x, { mosq: R[i] && mosqDespiece(R[i]) ? false : x.mosq })) }), P);
+      mosq += (carp + vid) - (sin.carpinteria + sin.vidrios); carp = sin.carpinteria; vid = sin.vidrios;
+    }
+    return { carpinteria: carp, vidrios: vid, montaje, mosq, unitario: carp + vid + montaje + mosq, hetmo: h };
   }
 
   const MANO = { izq: 'izquierda', der: 'derecha' };

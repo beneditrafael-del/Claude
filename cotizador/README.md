@@ -144,7 +144,8 @@ Sale de las capturas de las 4 ventanas de prueba (`capturas/hetmo_prueba/`, carg
 ## Comparación con presupuestos reales de Hetmo (`datos/presupuestos_hetmo/`)
 Son 5 presupuestos con 51 ventanas. Se comparan con `node datos/presupuestos_hetmo/comparar.js datos/presupuestos_hetmo/ventanas.json 1565`.
 - **Prime 90/44:** Hetmo usa la "LINEA PRIME" (90/44) en las corredizas altas y la "PRIME 74" en el resto. El cotizador la elige sola a partir de 1900 mm de alto, y se puede forzar. Su carpintería es la de Prime 74 ×1,405, calibrado con el N° 240.
-- **Mosquitero corredizo:** 132,06 + 56,55 × ancho de hoja × 2 + 28 × (alto − 2), en USD de venta por hoja de mosquitero. Calibrado con el N° 240, que tiene una versión con mosquitera y otra sin.
+- **Mosquitero corredizo en Prime 74 de 2 hojas (despiece de la V3 de la tanda):** pasa a Marco 3 guías DZ (11,198) y suma una tercera hoja Prime 74 con tapa, encuentro, tapa de encuentro, tercera guía y refuerzos. Lleva contravidrio de 32,5 (1,248), tela (USD 10/m², medida hoja + 26 redondeada a 10 mm), burlete (0,15/m, sin el ×1,07), 2 ruedas de 30 kg (2,284), cubeta exterior (4,651), cubeta interior (5,257), 2 cortavientos y 2 topes más, y USD 23,729 más de mano de obra. La V3 da 942,69 contra 942,75 de Hetmo.
+- **Mosquitero corredizo en Prime 90/44 o en 3 hojas (todavía por fórmula):** 132,06 + 56,55 × ancho de hoja × 2 + 28 × (alto − 2), en USD de venta por hoja de mosquitero. Calibrado con el N° 240, que tiene una versión con mosquitera y otra sin.
 - **Ajustes de carpintería mientras no haya despiece:**
   - Corrediza de 3 hojas ×0,72 (N° 236).
   - Puerta DC 100 ×1,63 (N° 215 y 192).
